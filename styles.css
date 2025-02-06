@@ -1,0 +1,264 @@
+:root {
+    --green-bright: #00ff00;
+    --dark-gray: #272123;
+}
+
+@font-face {
+    font-family: 'Digital-7';
+    src: url('fonts/Digital-7.woff2') format('woff2'),
+        url('fonts/Digital-7.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    background-color: var(--dark-gray);
+    color: var(--green-bright);
+    font-family: 'Digital-7', monospace;
+    margin: 0;
+    overflow: hidden;
+}
+
+.main-title {
+    font-size: clamp(6vw, 10vw, 14vh);
+    line-height: 1;
+    color: var(--green-bright);
+    position: relative;
+    z-index: 2;
+    height: 100%;
+}
+
+.rounded-box {
+    border: 3px solid var(--green-bright);
+    border-radius: 5mm;
+    background-color: rgba(39, 33, 35, 0.9);
+    position: relative;
+    z-index: 2;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+}
+
+/* 🔹 Botones inactivos: Apagados y sin hover */
+.option-box.inactive {
+    opacity: 0.5;  /* Hace que se vean más apagados */
+    pointer-events: none; /* No permite clics */
+    cursor: not-allowed; /* Muestra el cursor de prohibido */
+    filter: grayscale(80%); /* Efecto apagado */
+}
+
+/* 🔹 Caja Principal */
+#loginBox {
+    background-color: rgba(39, 33, 35, 0.9); /* 🔹 Igual al submenu */
+    width: 100%; /* Mantiene su tamaño sin crecer */
+    height: auto;
+    transition: background-color 0.4s ease-in-out;
+    position: relative;
+}
+
+/* 🔹 Caja Expandida */
+.login-options {
+    position: absolute;
+    top: 0;
+    left: 100%; /* Se expande a la derecha */
+    width: 280px;
+    background-color: rgba(39, 33, 35, 0.9);
+    border-right: 3px solid var(--green-bright);
+    border-left: none;
+    border-top: 3px solid var(--green-bright);
+    border-radius: 0 5mm 5mm 5mm;
+    min-width: 250px; /* Tamaño mínimo para que se vea bien en tamanos peques */
+    padding: 15px;
+    transition: transform 0.3s ease-in-out;
+    transform-origin: top;
+    box-shadow: 5px 0px 10px rgba(0, 255, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+}
+
+.login-options.visible {
+    transform: scaleY(1);
+}
+
+.login-options.hidden {
+    transform: scaleY(0);
+}
+
+/* 🔹 Mostrar caja cuando se activa */
+.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 🔹 Estilo de opciones */
+.login-option {
+    padding: 10px;
+    text-align: left;
+    background: rgba(0, 255, 0, 0.1);
+    border-radius: 3mm;
+    cursor: pointer;
+    margin-bottom: 5px;
+}
+
+.separator {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--green-bright), transparent);
+    margin: 5px auto;
+}
+
+.title-box {
+    height: calc(2 * 8.33%);
+}
+
+.option-box {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    position: relative;
+    z-index: 2;
+    font-size: clamp(12px, 2vw, 20px); /* Tamaño de fuente responsivo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: auto;
+    min-width: 150px;  /* Establece un ancho mínimo */
+    min-height: 40px; /* Evita que la caja sea demasiado pequeña */
+    padding: 8px;
+    white-space: nowrap; /* 🔹 Evita que el texto salte de línea */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 🔹 Si se corta, pone "..." */
+}
+
+.option-box:hover {
+    transform: scale(1.05);
+    background-color: rgba(39, 33, 35, 0.8);
+}
+
+/* 🔹 EFECTO MATRIX */
+.matrix-effect {
+    position: relative;
+    background-color: var(--dark-gray);
+    overflow: hidden;
+    height: 100vh;
+    z-index: 1;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('./Game.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 0;
+}
+
+.section-divider {
+    position: absolute;
+    top: 110%;/* Coloca la línea a un 10% debajo del título */
+    height: 4px;
+    width: 16%;
+    background-color: var(--green-bright);
+}
+
+.section-divider.left {
+    left: 0%; /* Posiciona la línea de la izquierda */
+}
+
+.section-divider.right {
+    right: 0%; /* Posiciona la línea de la derecha */
+}
+
+
+.vertical-divider {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: var(--green-bright);
+    transform: scaleX(0.1);
+    will-change: transform;
+    z-index: 2;
+}
+
+.divider-left {
+    left: calc(7.5% - 0.5px);
+}
+
+.divider-right {
+    right: calc(7.5% - 0.5px);
+}
+
+/* 🔹 Aseguramos que el canvas del juego ocupe bien el espacio */
+#juego {
+    width: 100%;
+    height: 100%;
+    display: block; /* Evita espacios extra */
+    object-fit: contain; /* Se ajusta sin deformarse */
+    transition: width 0.3s ease-in-out, height 0.3s ease-in-out; /* Transición suave */
+    background-color: black; /* Fondo por defecto */
+}
+
+/* 🔹 En tablets (menos de 1024px), eliminamos UNA columna Matrix */
+@media (max-width: 1024px) {
+    .matrix-effect,
+    .vertical-divider { 
+        display: none; /* Oculta solo las columnas laterales */
+    }
+
+    .col-10 {
+        margin-left: 0; /* 🔹 Fijamos la columna al lado izquierdo */
+        margin-right: auto;
+        text-align: left; /* 🔹 Mantiene el texto alineado a la izquierda */
+    }
+
+    
+    .option-box {
+        display: block;
+        margin-left: 0; /* 🔹 Asegura que el menú no se centre */
+    }
+}
+
+/* 🔹 En móviles (menos de 768px), ocultamos ambas columnas Matrix */
+@media (max-width: 768px) {
+    .matrix-effect,
+    .vertical-divider {
+        display: none; /* Oculta ambas columnas */
+    }
+    
+    .col-10 {
+        margin-left: 0;
+        margin-right: auto;
+        text-align: left;
+    }
+
+    .option-box {
+        font-size: clamp(10px, 3vw, 16px); /* 🔹 Se ajusta mejor */
+        padding: 6px;
+    }
+}
+
+/* 🔹 En móviles aún más pequeños (menos de 480px), priorizamos los menús */
+@media (max-width: 480px) {
+
+    option-box {
+        font-size: 4vw; /* 🔹 Se adapta al ancho de la pantalla */
+        padding: 4px;
+    }
+}
+
+
