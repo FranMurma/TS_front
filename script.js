@@ -1,86 +1,3 @@
-// Para poder hacer back y forward en el navegador!!
-document.addEventListener("DOMContentLoaded", function () {
-    // 🔹 Si la página se carga sin un hash, establecemos un estado inicial en el historial
-    if (!window.location.hash) {
-        history.pushState({ menu: "home" }, '', window.location.pathname);
-    }
-
-    // 🔹 Si hay un hash en la URL, lo usamos para cargar el menú correcto
-    if (window.location.hash) {
-        const menu = window.location.hash.substring(1);
-        showMenu(menu);
-    }
-
-    // 🔹 Manejo del botón "Atrás" del navegador para cambiar entre menús
-    window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.menu) {
-            showMenu(event.state.menu);
-        } else {
-            showMenu("home"); // Volvemos al estado inicial
-        }
-    
-        // 🔹 Si el usuario presiona "Atrás", también cerramos la caja de login
-        let loginOptions = document.getElementById("loginOptions");
-        if (loginOptions) {
-            loginOptions.classList.remove("visible");
-            loginOptions.style.opacity = "0";
-            loginOptions.style.visibility = "hidden";
-    
-            // 🔹 Esperamos 300ms para eliminar el contenido y evitar "recuerdos"
-            setTimeout(() => {
-                loginOptions.innerHTML = "";
-            }, 300);
-        }
-    });
-
-    // 🔹 Manejo del botón "Atrás" para mostrar aviso en index.html (evitar salir accidentalmente)
-    window.addEventListener("popstate", function (event) {
-        if (!event.state || event.state.menu === "home") {
-            console.log("⚠️ Intento de salir detectado.");
-            const confirmExit = confirm("⚠️ Vas a salir de la página, ¿estás seguro?");
-            if (!confirmExit) {
-                history.pushState({ menu: "home" }, '', window.location.pathname);
-            }
-        }
-    });
-});
-
-
-
-// Función para cambiar de menú y actualizar la URL sin recargar
-function navigateTo(menu) {
-    history.pushState({ menu }, '', `#${menu}`);
-    showMenu(menu);
-}
-
-// !!!!! Protección del juego contra el botón "Atrás"
-function enterGame() {
-    console.log("🎮 Entrando al juego...");
-
-    // 🔹 Reemplazar el estado actual para que "Atrás" no saque al usuario
-    history.replaceState({ menu: "game" }, '', window.location.pathname);
-
-    // 🔹 Evitar que "Atrás" saque al usuario del juego
-    window.addEventListener("popstate", function (event) {
-        if (event.state && event.state.menu === "game") {
-            console.log("🚫 Botón 'Atrás' bloqueado en el juego.");
-            history.pushState({ menu: "game" }, '', window.location.pathname);
-        }
-    });
-
-    // 🔹 Deshabilitar teclas de navegación
-    window.addEventListener("keydown", function (event) {
-        if ((event.key === "Backspace" || event.key === "ArrowLeft") && event.altKey) {
-            event.preventDefault();
-            console.log("🚫 Navegación deshabilitada en el juego.");
-        }
-    });
-
-    loadGame(); // Aquí se inicia el juego
-}
-
-
-
 // 🎥 Efecto Matrix en los fondos, columna 1 y 12
 function createMatrixEffect(canvasId) {
     const canvas = document.getElementById(canvasId);
@@ -118,6 +35,143 @@ createMatrixEffect('matrixCanvas');
 createMatrixEffect('matrixCanvasRight');
 
 
+
+
+let isLoggedIn = false;
+
+function navigateTo(section) {
+    history.pushState({ page: section }, "", `#${section}`);
+    updateView(section);
+}
+
+function activateMenus() {
+    isLoggedIn = true;
+
+    // 🔹 Cambiamos el hash a loged, pero sin crear una nueva entrada en el historial
+    history.replaceState(null, "", "#loged");
+    updateView("loged");
+
+    document.querySelectorAll(".option-box").forEach(option => {
+        option.classList.remove("inactive");
+        option.style.pointerEvents = "auto";
+    });
+}
+
+function updateView(section) {
+    document.querySelectorAll('.view-section').forEach(sec => {
+        sec.style.display = 'none';
+    });
+
+    if (isLoggedIn) {
+        if (section === "login") {
+            section = "loged"; // 🔹 Si el usuario ya está logeado, lo llevamos a loged
+            history.replaceState(null, "", "#loged");
+        }
+        document.getElementById("loged").style.display = "block";
+        document.getElementById("login").style.display = "none";
+    } else {
+        if (section === "loged") {
+            section = "login"; // 🔹 Si el usuario intenta ir a loged sin estar logeado, lo mandamos a login
+            history.replaceState(null, "", "#login");
+        }
+        document.getElementById("login").style.display = "block";
+    }
+
+    const activeSection = document.getElementById(section);
+    if (activeSection) {
+        activeSection.style.display = 'block';
+    }
+}
+
+
+// Manejo del botón Back y Forward del navegador
+window.addEventListener("DOMContentLoaded", function () {
+    // 🔹 Si no hay hash, forzamos #login
+    if (!location.hash) {
+        history.replaceState(null, "", "#login");
+    }
+
+    let initialSection = location.hash.replace("#", "");
+
+    // 🔹 Si el usuario ya está logeado y está en login, redirigir a welcome
+    if (isLoggedIn && initialSection === "login") {
+        navigateTo("welcome");
+    } else {
+        updateView(initialSection);
+    }
+});
+
+
+
+// Restaurar la navegación con hashchange
+window.addEventListener("hashchange", function() {
+    let section = location.hash.replace("#", "") || "login";
+    updateView(section);
+});
+
+// Inicializar la vista al cargar la página
+window.addEventListener("DOMContentLoaded", function() {
+    let initialSection = location.hash.replace("#", "") || "login";
+    updateView(initialSection);
+});
+
+// 🔹 Activar menús después del login
+function activateMenus() {
+    isLoggedIn = true;
+
+    // 🔹 Asegurar que "Welcome, Player" aparezca y permanezca visible
+    document.getElementById("welcome").style.display = "block";
+    document.getElementById("login").style.display = "none"; // Ocultar el login
+
+    // 🔹 Desbloquear los menús
+    document.querySelectorAll(".menu-option").forEach(option => {
+        option.classList.remove("inactive");
+        option.style.pointerEvents = "auto";
+    });
+
+    // 🔹 Redirigir a la página "welcome" tras loguearse
+    navigateTo("welcome");
+}
+
+// 🔹 Cerrar el menú de usuario cuando se hace clic fuera
+document.addEventListener("click", function(event) {
+    const userMenu = document.getElementById("userWelcome");
+    
+    if (userMenu && !userMenu.contains(event.target)) {
+        document.getElementById("loginOptions").classList.remove("visible");
+    }
+});
+
+
+
+
+
+
+
+// 🔹 Efecto máquina de escribir
+function typeWriterEffect(element, text, speed, callback) {
+    let index = 0;
+
+    if (element.dataset.typed === "true") return;
+    element.dataset.typed = "true";
+
+    element.innerHTML = "";
+
+    function write() {
+        if (index < text.length) {
+            element.innerHTML += text.charAt(index);
+            index++;
+            setTimeout(write, speed);
+        } else if (callback) {
+            callback();
+        }
+    }
+
+    write();
+}
+
+
+
 // Efecto solo para que aparezca en plan consola escribiendo poco a poco
 // 🔹 Efecto máquina de escribir
 function typeWriterEffect(element, text, speed, callback) {
@@ -153,19 +207,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (!loginOptions.classList.contains("visible")) {
             loginOptions.classList.add("visible");
-            loginOptions.style.opacity = "1"; 
-            loginOptions.style.visibility = "visible"; 
             showMenu("main");
         }
 
         event.stopPropagation(); // ❌ Evita que el clic en el loginBox lo cierre
-    });
-
-    // cerrar el LoginBox al hacer clic fuera
-    document.addEventListener("click", function (event) {
-        if (!loginBox.contains(event.target) && !loginOptions.contains(event.target)) {
-            closeLoginMenu();
-        }
     });
 
     // ✅ Evitar que "Welcome, Player" cierre el menú
@@ -262,7 +307,7 @@ function showMenu(menu) {
                     return;
                 }
 
-                navigateTo(option.dataset.menu);
+                showMenu(option.dataset.menu);
             });
         });
     }, 100);
@@ -340,18 +385,10 @@ function resetPassword() {
 // Para cerrar el menu
 function closeLoginMenu() {
     console.log("🔴 Se está cerrando el menú de login.");
-    
     let loginOptions = document.getElementById("loginOptions");
     loginOptions.classList.remove("visible");
-
-    // 🔹 Asegurar que el menú está listo para abrirse de nuevo
-    setTimeout(() => {
-        loginOptions.style.opacity = "0"; 
-        loginOptions.style.visibility = "hidden"; 
-        loginOptions.innerHTML = ""; // Borra el contenido anterior
-    }, 300);
+    loginOptions.style.display = "none"; // 🔹 Ahora se oculta completamente
 }
-
 
 
 // Habilitar los menús después del login
@@ -397,7 +434,7 @@ function openUserMenu() {
     loginOptions.style.display = "block"; 
 
     // 🔹 Mostrar las opciones de usuario
-    navigateTo("userMenu");
+    showMenu("userMenu");
 }
 
 
@@ -447,17 +484,10 @@ function resetUI() {
         if (!loginOptions.classList.contains("visible")) {
             loginOptions.classList.add("visible");
             loginOptions.style.display = "block"; // 🔹 FORZAR VISIBILIDAD DEL MENÚ
-            navigateTo("main");
+            showMenu("main");
         }
     });
 
     // 🔹 Cerrar el menú de usuario si estaba abierto
     closeLoginMenu();
 }
-
-
-
-
-
-
-
