@@ -29,6 +29,8 @@ body {
 }
 
 .rounded-box {
+    display: inline-block;
+    white-space: normal;
     border: 3px solid var(--green-bright);
     border-radius: 5mm;
     background-color: rgba(39, 33, 35, 0.9);
@@ -39,12 +41,25 @@ body {
     cursor: pointer;
 }
 
+.no-border {
+    border: none; /* Quitar el borde */
+    background: transparent !important; /* Fondo transparente */
+    color: rgba(0, 255, 0, 0.6); /* Texto verde suave, más discreto */
+    font-size: 12px; /* Tamaño de fuente más pequeño */
+}
+
+.no-border:hover {
+    background: transparent, !important; /* Evitar cambio de fondo en hover */
+    color: rgba(0, 255, 0, 0.8); /* El texto se pone un poco más brillante al hacer hover */
+}
+
 /* 🔹 Botones inactivos: Apagados y sin hover */
 .option-box.inactive {
     opacity: 0.5;  /* Hace que se vean más apagados */
     pointer-events: none; /* No permite clics */
     cursor: not-allowed; /* Muestra el cursor de prohibido */
     filter: grayscale(80%); /* Efecto apagado */
+    transition: opacity 0.3s ease-in-out;
 }
 
 /* 🔹 Caja Principal */
@@ -60,35 +75,36 @@ body {
 .login-options {
     position: absolute;
     top: 0;
-    left: 100%; /* Se expande a la derecha */
+    left: 100%; 
     width: 280px;
     background-color: rgba(39, 33, 35, 0.9);
+    right: 0;
+    overflow-x: hidden;
     border-right: 3px solid var(--green-bright);
     border-left: none;
     border-top: 3px solid var(--green-bright);
     border-radius: 0 5mm 5mm 5mm;
-    min-width: 250px; /* Tamaño mínimo para que se vea bien en tamanos peques */
+    max-width: 90vw;
+    min-width: 250px; /* Tamaño mínimo para que se vea bien en pantallas pequeñas */
     padding: 15px;
-    transition: transform 0.3s ease-in-out;
     transform-origin: top;
     box-shadow: 5px 0px 10px rgba(0, 255, 0, 0.3);
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, transform 0.3s ease-in-out;
+    z-index: 1000;
 }
 
 .login-options.visible {
+    opacity: 1;
+    visibility: visible;
     transform: scaleY(1);
 }
 
 .login-options.hidden {
+    opacity: 0;
+    visibility: hidden;
     transform: scaleY(0);
-}
-
-/* 🔹 Mostrar caja cuando se activa */
-.visible {
-    opacity: 1;
-    visibility: visible;
 }
 
 /* 🔹 Estilo de opciones */
@@ -99,6 +115,11 @@ body {
     border-radius: 3mm;
     cursor: pointer;
     margin-bottom: 5px;
+    transition: background 0.3s ease-in-out;
+}
+
+.login-option:hover {
+    background: rgba(0, 255, 0, 0.3);
 }
 
 .separator {
@@ -115,21 +136,21 @@ body {
 .option-box {
     text-align: center;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease-in-out;
     position: relative;
     z-index: 2;
-    font-size: clamp(12px, 2vw, 20px); /* Tamaño de fuente responsivo */
-    display: flex;
+    font-size: clamp(12px, 2vw, 20px);
+    display: inline-block;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: auto;
-    min-width: 150px;  /* Establece un ancho mínimo */
-    min-height: 40px; /* Evita que la caja sea demasiado pequeña */
+    min-width: 150px;
+    min-height: 40px;
     padding: 8px;
-    white-space: nowrap; /* 🔹 Evita que el texto salte de línea */
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis; /* 🔹 Si se corta, pone "..." */
+    text-overflow: ellipsis;
 }
 
 .option-box:hover {
@@ -169,20 +190,20 @@ canvas {
 
 .section-divider {
     position: absolute;
-    top: 110%;/* Coloca la línea a un 10% debajo del título */
+    top: 110%;
     height: 4px;
     width: 16%;
-    background-color: var(--green-bright);
 }
 
 .section-divider.left {
-    left: 0%; /* Posiciona la línea de la izquierda */
+    left: 0%;
+    background: linear-gradient(90deg, var(--green-bright), transparent 80%);
 }
 
 .section-divider.right {
-    right: 0%; /* Posiciona la línea de la derecha */
+    background: linear-gradient(-90deg, var(--green-bright), transparent 80%);
+    right: 0%;
 }
-
 
 .vertical-divider {
     position: absolute;
@@ -207,29 +228,29 @@ canvas {
 #juego {
     width: 100%;
     height: 100%;
-    display: block; /* Evita espacios extra */
-    object-fit: contain; /* Se ajusta sin deformarse */
-    transition: width 0.3s ease-in-out, height 0.3s ease-in-out; /* Transición suave */
-    background-color: black; /* Fondo por defecto */
+    display: block;
+    object-fit: contain;
+    transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+    background-color: black;
+    z-index: 0;
 }
 
 /* 🔹 En tablets (menos de 1024px), eliminamos UNA columna Matrix */
 @media (max-width: 1024px) {
     .matrix-effect,
     .vertical-divider { 
-        display: none; /* Oculta solo las columnas laterales */
+        display: none;
     }
 
     .col-10 {
-        margin-left: 0; /* 🔹 Fijamos la columna al lado izquierdo */
+        margin-left: 0;
         margin-right: auto;
-        text-align: left; /* 🔹 Mantiene el texto alineado a la izquierda */
+        text-align: left;
     }
 
-    
     .option-box {
         display: block;
-        margin-left: 0; /* 🔹 Asegura que el menú no se centre */
+        margin-left: 0;
     }
 }
 
@@ -237,7 +258,7 @@ canvas {
 @media (max-width: 768px) {
     .matrix-effect,
     .vertical-divider {
-        display: none; /* Oculta ambas columnas */
+        display: none;
     }
     
     .col-10 {
@@ -247,16 +268,36 @@ canvas {
     }
 
     .option-box {
-        font-size: clamp(10px, 3vw, 16px); /* 🔹 Se ajusta mejor */
+        font-size: clamp(10px, 3vw, 16px);
         padding: 6px;
     }
 }
 
-/* 🔹 En móviles aún más pequeños (menos de 480px), priorizamos los menús */
+/* 🔹 En móviles aún más pequeños (menos de 480px) */
 @media (max-width: 480px) {
-
-    option-box {
-        font-size: 4vw; /* 🔹 Se adapta al ancho de la pantalla */
+    .option-box {
+        font-size: 4vw;
         padding: 4px;
     }
 }
+
+
+/*** Lenguajes ***/
+.language-dropdown {
+    display: none; /* Oculto por defecto */
+    position: absolute;
+    background-color: black; 
+    color: rgba(0, 255, 0, 0.7);
+    border: none;
+    padding: 5px;
+    font-size: 14px;
+    width: 120px;
+    outline: none;
+}
+
+.language-dropdown.visible {
+    display: block; /* Cuando está visible, mostrar */
+}
+
+
+

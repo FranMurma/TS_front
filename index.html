@@ -27,41 +27,61 @@
                 <div class="mt-4">
                     <div class="row mb-2">
                         <div class="col-2 position-relative">
-                            <div id="loginBox" class="rounded-box option-box menu-option p-3">
-                                Log in / Sign in
+                            <div id="loginBox" class="rounded-box option-box menu-option p-3" data-translate="login">
+                                Log in / Sign up
                             </div>
                             <div id="loginOptions" class="login-options">
                                 <p class="login-option intra-login" onclick="loginWithIntra()">Already a 42 member? Log in with intra</p>
                                 <div class="separator"></div>
-                                <p class="login-option" data-text="Sign in with email">&nbsp;</p>
+                                <p class="login-option" data-menu="sign-in" data-text="Sign in with email">&nbsp;</p>
+                                <div class="separator"></div>
+                                <p class="login-option" data-menu="sign-up" data-text="Sign up with email">&nbsp;</p> <!-- 🔹 Nueva opción -->
                                 <div class="separator"></div>
                                 <p class="login-option" data-menu="forgot" data-text="Forgot your password?">&nbsp;</p>
-
-                            </div>
+                            </div>                            
                         </div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive">Tournament</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="tournament" data-translate="tournament">Tournament</div>
                         </div>
                     </div>
                     <div class="row mb-2">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive">Settings</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="settings" data-translate="settings">Settings</div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive">Credits</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="credits" data-translate="credits">Credits</div>
                         </div>
                     </div>
+                    
+                    <!-- Selector de idioma debajo de Credits -->
+                    <div class="row mt-2">
+                        <div class="col-2">
+                            <div id="languageBox" class="rounded-box option-box menu-option p-3 no-border" data-translate="language">
+                                 Language
+                            </div>
+                            <select id="languageSelector" class="language-dropdown">
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                            </select>
+                        </div>
+                    </div>
+    
                 </div>
             </div>
+
+            
             <div class="col-1 matrix-effect">
                 <canvas id="matrixCanvasRight"></canvas>
             </div>
         </div>
     </div>
+
+    
 
     <script src="script.js"></script>
 </body>

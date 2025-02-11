@@ -36,142 +36,6 @@ createMatrixEffect('matrixCanvasRight');
 
 
 
-
-let isLoggedIn = false;
-
-function navigateTo(section) {
-    history.pushState({ page: section }, "", `#${section}`);
-    updateView(section);
-}
-
-function activateMenus() {
-    isLoggedIn = true;
-
-    // 🔹 Cambiamos el hash a loged, pero sin crear una nueva entrada en el historial
-    history.replaceState(null, "", "#loged");
-    updateView("loged");
-
-    document.querySelectorAll(".option-box").forEach(option => {
-        option.classList.remove("inactive");
-        option.style.pointerEvents = "auto";
-    });
-}
-
-function updateView(section) {
-    document.querySelectorAll('.view-section').forEach(sec => {
-        sec.style.display = 'none';
-    });
-
-    if (isLoggedIn) {
-        if (section === "login") {
-            section = "loged"; // 🔹 Si el usuario ya está logeado, lo llevamos a loged
-            history.replaceState(null, "", "#loged");
-        }
-        document.getElementById("loged").style.display = "block";
-        document.getElementById("login").style.display = "none";
-    } else {
-        if (section === "loged") {
-            section = "login"; // 🔹 Si el usuario intenta ir a loged sin estar logeado, lo mandamos a login
-            history.replaceState(null, "", "#login");
-        }
-        document.getElementById("login").style.display = "block";
-    }
-
-    const activeSection = document.getElementById(section);
-    if (activeSection) {
-        activeSection.style.display = 'block';
-    }
-}
-
-
-// Manejo del botón Back y Forward del navegador
-window.addEventListener("DOMContentLoaded", function () {
-    // 🔹 Si no hay hash, forzamos #login
-    if (!location.hash) {
-        history.replaceState(null, "", "#login");
-    }
-
-    let initialSection = location.hash.replace("#", "");
-
-    // 🔹 Si el usuario ya está logeado y está en login, redirigir a welcome
-    if (isLoggedIn && initialSection === "login") {
-        navigateTo("welcome");
-    } else {
-        updateView(initialSection);
-    }
-});
-
-
-
-// Restaurar la navegación con hashchange
-window.addEventListener("hashchange", function() {
-    let section = location.hash.replace("#", "") || "login";
-    updateView(section);
-});
-
-// Inicializar la vista al cargar la página
-window.addEventListener("DOMContentLoaded", function() {
-    let initialSection = location.hash.replace("#", "") || "login";
-    updateView(initialSection);
-});
-
-// 🔹 Activar menús después del login
-function activateMenus() {
-    isLoggedIn = true;
-
-    // 🔹 Asegurar que "Welcome, Player" aparezca y permanezca visible
-    document.getElementById("welcome").style.display = "block";
-    document.getElementById("login").style.display = "none"; // Ocultar el login
-
-    // 🔹 Desbloquear los menús
-    document.querySelectorAll(".menu-option").forEach(option => {
-        option.classList.remove("inactive");
-        option.style.pointerEvents = "auto";
-    });
-
-    // 🔹 Redirigir a la página "welcome" tras loguearse
-    navigateTo("welcome");
-}
-
-// 🔹 Cerrar el menú de usuario cuando se hace clic fuera
-document.addEventListener("click", function(event) {
-    const userMenu = document.getElementById("userWelcome");
-    
-    if (userMenu && !userMenu.contains(event.target)) {
-        document.getElementById("loginOptions").classList.remove("visible");
-    }
-});
-
-
-
-
-
-
-
-// 🔹 Efecto máquina de escribir
-function typeWriterEffect(element, text, speed, callback) {
-    let index = 0;
-
-    if (element.dataset.typed === "true") return;
-    element.dataset.typed = "true";
-
-    element.innerHTML = "";
-
-    function write() {
-        if (index < text.length) {
-            element.innerHTML += text.charAt(index);
-            index++;
-            setTimeout(write, speed);
-        } else if (callback) {
-            callback();
-        }
-    }
-
-    write();
-}
-
-
-
 // Efecto solo para que aparezca en plan consola escribiendo poco a poco
 // 🔹 Efecto máquina de escribir
 function typeWriterEffect(element, text, speed, callback) {
@@ -198,29 +62,193 @@ function typeWriterEffect(element, text, speed, callback) {
 
 
 
-//  Manejo del menú de login, de momento el unico que hace algo
+
+let isLoggedIn = false;
+
+function navigateTo(section) {
+    if (!section) {
+        console.warn("⚠️ Se intentó navegar a una sección vacía.");
+        return;
+    }
+
+    if (!isLoggedIn && section !== "login") {
+        console.warn(`⛔ Acceso denegado a '${section}' porque el usuario no está logeado.`);
+        return;
+    }
+
+    console.log(`🔄 Navegando a: ${section}`);
+    history.pushState({ page: section }, "", `#${section}`);
+    updateView(section);
+}
+
+
+
+function updateView(section) {
+    console.log(`🔄 Actualizando vista a: ${section}`);
+
+    // Ocultar todas las secciones visibles
+    document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
+
+    // 🔹 Manejo de usuario logeado
+    if (isLoggedIn) {
+        if (section === "login") {
+            console.warn("⚠️ Intento de cambiar a login mientras está logeado. Corrigiendo a loged.");
+            section = "loged";
+        }
+
+        let logedSection = document.getElementById("loged");
+        if (!logedSection) {
+            console.warn("⚠️ Se esperaba la sección #loged pero no existe. Creándola...");
+            logedSection = document.createElement("div");
+            logedSection.id = "loged";
+            logedSection.classList.add("view-section");
+            logedSection.innerHTML = `<h2 data-translate="welcome-player">${translations[localStorage.getItem("language") || "en"]["welcome-player"]}</h2>`;
+            document.body.appendChild(logedSection);
+            console.log("✅ Se ha creado dinámicamente la sección #loged");
+        }
+
+        logedSection.style.display = "block";
+    } 
+    // 🔹 Manejo de usuario NO logeado
+    else {
+        if (section === "loged") {
+            console.warn("⚠️ Intento de cambiar a loged sin estar logeado. Corrigiendo a login.");
+            section = "login";
+        }
+
+        let loginSection = document.getElementById("login");
+        if (!loginSection) {
+            console.error("❌ ERROR: La sección #login no existe en el DOM. Redirigiendo a login...");
+            section = "login";
+        } else {
+            loginSection.style.display = "block";
+        }
+    }
+
+    // 🔹 Asegurar que la sección final existe antes de mostrarla
+    const activeSection = document.getElementById(section);
+    if (!activeSection) {
+        console.error(`❌ ERROR: La sección #${section} no existe. Redirigiendo a login.`);
+        updateView("login");
+        return;
+    }
+
+    console.log(`✅ Mostrando sección: ${section}`);
+    activeSection.style.display = 'block';
+}
+
+
+
+
+
+
+
+// Manejo del botón Back y Forward del navegador
+// Manejo del idioma y la navegación
+// Al cargar la página, recuperamos el idioma guardado en localStorage
 document.addEventListener("DOMContentLoaded", function () {
-    const loginBox = document.getElementById("loginBox");
+    console.log("🔄 Página cargada. Inicializando configuración...");
 
-    loginBox.addEventListener("click", function (event) {
-        let loginOptions = document.getElementById("loginOptions");
+    // 🟢 1. Inicialización del idioma
+    const currentLanguage = localStorage.getItem("language") || "en";
+    const languageSelector = document.getElementById("languageSelector");
+    const languageBox = document.getElementById("languageBox");
 
-        if (!loginOptions.classList.contains("visible")) {
-            loginOptions.classList.add("visible");
-            showMenu("main");
-        }
+    if (languageSelector) {
+        languageSelector.value = currentLanguage;
+        applyLanguage(currentLanguage);
+        languageSelector.addEventListener("change", function (event) {
+            const selectedLanguage = event.target.value;
+            localStorage.setItem("language", selectedLanguage);
+            applyLanguage(selectedLanguage);
+        });
+    }
 
-        event.stopPropagation(); // ❌ Evita que el clic en el loginBox lo cierre
-    });
+    // 🟢 2. Manejo de la navegación en la carga de la página
+    if (!location.hash || (location.hash === "#loged" && !isLoggedIn)) {
+        console.warn("⚠️ Corrigiendo hash inválido. Redirigiendo a login.");
+        history.replaceState(null, "", "#login");
+    }
 
-    // ✅ Evitar que "Welcome, Player" cierre el menú
-    document.addEventListener("click", function (event) {
-        if (event.target.id === "userWelcome") {
+    // 🟢 3. Manejo del selector de idioma
+    if (languageBox && languageSelector) {
+        languageBox.addEventListener("click", (event) => {
             event.stopPropagation();
-            openUserMenu();
-        }
-    });
+            languageSelector.classList.toggle("visible");
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!languageBox.contains(event.target) && !languageSelector.contains(event.target)) {
+                languageSelector.classList.remove("visible");
+            }
+        });
+    }
+
+    // 🟢 4. Manejo del menú de login
+    const loginBox = document.getElementById("loginBox");
+    const loginOptions = document.getElementById("loginOptions");
+
+    if (loginBox && loginOptions) {
+        loginBox.addEventListener("click", function (event) {
+            event.stopPropagation();
+            if (!loginOptions.classList.contains("visible")) {
+                loginOptions.classList.add("visible");
+                showMenu("main");
+            }
+        });
+    }
 });
+
+
+
+
+// Restaurar la navegación con hashchange
+window.addEventListener("hashchange", function() {
+    let section = location.hash.replace("#", "") || "login";
+    console.log(`🔄 (hashchange) Se detectó cambio de hash a: ${section}`);
+
+    // 🛠️ Si el usuario no está logeado y trata de ir a "loged", corregimos a "login"
+    if (!isLoggedIn && section === "loged") {
+        console.warn("⚠️ Intento de acceder a loged sin estar logeado. Redirigiendo a login.");
+        section = "login";
+        history.replaceState(null, "", "#login");
+    }
+
+    // 🛠️ Validamos si la sección realmente existe en el DOM
+    if (!document.getElementById(section)) {
+        console.warn(`⚠️ Se intentó acceder a una sección inexistente: #${section}. Redirigiendo a login.`);
+        section = "login";
+        history.replaceState(null, "", "#login");
+    }
+
+    updateView(section);
+});
+
+
+
+
+// Cerrar el menú de usuario cuando se hace clic fuera
+document.addEventListener("click", function(event) {
+    const userMenu = document.getElementById("userWelcome");
+    const loginOptions = document.getElementById("loginOptions");
+
+    // Si el User Menu está abierto y el clic NO fue en el User Menu ni en su contenido, lo cerramos
+    if (loginOptions.classList.contains("visible") && 
+        event.target !== userMenu && 
+        !loginOptions.contains(event.target)) {
+        
+        console.log("🔴 Clic fuera del User Menu. Cerrando...");
+        loginOptions.classList.remove("visible");
+    }
+});
+
+
+
+
+
+
+
+
 
 
 
@@ -232,68 +260,59 @@ function showMenu(menu) {
     loginOptions.classList.add("visible");
     loginOptions.innerHTML = ""; 
 
+    // Obtener el idioma actual
+    const lang = localStorage.getItem("language") || "en";
+
     let menuContent = "";
 
     if (menu === "main") {
         menuContent = `
-            <p class="login-option intra-login" data-text="Already a 42 member? Log in with intra"></p>
+            <p class="login-option intra-login" data-text="already-42">${translations[lang]["already-42"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="email" data-text="Sign in with email"></p>
+            <p class="login-option" data-menu="sign-in" data-text="sign-in">${translations[lang]["sign-in"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="forgot" data-text="Forgot your password?"></p>
+            <p class="login-option" data-menu="sign-up" data-text="sign-up">${translations[lang]["sign-up"]}</p>
+            <div class="separator"></div>
+            <p class="login-option" data-menu="forgot" data-text="forgot-password">${translations[lang]["forgot-password"]}</p>
         `;
     } 
-    else if (menu === "email") { 
+    else if (menu === "sign-in") { 
         menuContent = `
-            <p class="submenu-text" data-text="Sign in with Email"></p>
-            <input type="text" id="signInEmail" class="login-input" placeholder="Email">
-            <input type="password" id="signInPassword" class="login-input" placeholder="Password">
-            <button class="login-submit" onclick="handleSignIn()">Sign in</button>
-            <p class="back-option" data-menu="main">← Back</p>
+            <p class="submenu-text" data-text="sign-in">${translations[lang]["sign-in"]}</p>
+            <input type="text" id="signInEmail" class="login-input" placeholder="${translations[lang]["email"]}">
+            <input type="password" id="signInPassword" class="login-input" placeholder="${translations[lang]["password"]}">
+            <button class="login-submit" onclick="handleSignIn()">${translations[lang]["sign-in"]}</button>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
         `;
     }    
+    else if (menu === "sign-up") { 
+        menuContent = `
+            <p class="submenu-text" data-text="create-account">${translations[lang]["create-account"]}</p>
+            <input type="text" id="signUpUsername" class="login-input" placeholder="${translations[lang]["username"]}">
+            <input type="email" id="signUpEmail" class="login-input" placeholder="${translations[lang]["email"]}">
+            <input type="password" id="signUpPassword" class="login-input" placeholder="${translations[lang]["password"]}">
+            <button class="login-submit" onclick="handleSignUp()">${translations[lang]["sign-up-button"]}</button>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
+        `;
+    }
     else if (menu === "forgot") {
         menuContent = `
-            <p class="submenu-text" data-text="Reset your password"></p>
-            <input type="email" class="login-input" placeholder="Enter your email">
-            <button class="login-submit" onclick="resetPassword()">Send reset link</button>
-            <p class="back-option" data-menu="main" data-text="← Back"></p>
+            <p class="submenu-text" data-text="reset-password">${translations[lang]["reset-password"]}</p>
+            <input type="email" class="login-input" placeholder="${translations[lang]["email"]}">
+            <button class="login-submit" onclick="resetPassword()">${translations[lang]["send-reset"]}</button>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
         `;
     }
-    // Para cuando estamos logeados, el menu del user
     else if (menu === "userMenu") {
         menuContent = `
-            <p class="submenu-text" data-text="User Options"></p>
-            <p class="login-option" data-menu="profile" data-text="Profile Settings"></p>
+            <p class="submenu-text" data-text="user-options">${translations[lang]["user-options"]}</p>
+            <p class="login-option" data-menu="profile" data-text="profile-settings">${translations[lang]["profile-settings"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="logout" data-text="Log out"></p>
+            <p class="login-option" data-menu="logout" data-text="logout">${translations[lang]["logout"]}</p>
         `;
     }
-    else if (menu === "logout") {
-        logoutUser();
-    }
-    
 
     loginOptions.innerHTML = menuContent;
-
-    // 🔹 Aplicar efecto máquina de escribir en cada opción
-    setTimeout(() => {
-        const options = loginOptions.querySelectorAll("p[data-text]");
-        let counter = 0;
-
-        function writeNextOption() {
-            if (counter < options.length) {
-                let option = options[counter];
-                option.innerHTML = ""; // Vacía el texto
-                typeWriterEffect(option, option.dataset.text, 20, () => {
-                    counter++;
-                    writeNextOption();
-                });
-            }
-        }
-
-        writeNextOption();
-    }, 100);
 
     // Agregar eventos de clic a las opciones después de actualizar el menú
     setTimeout(() => {
@@ -307,11 +326,47 @@ function showMenu(menu) {
                     return;
                 }
 
+                // Si es "Log out", llamamos a logoutUser()
+                if (option.dataset.menu === "logout") {
+                    console.log("⚠️ Clic en Log out detectado. Ejecutando logoutUser()...");
+                    logoutUser();
+                    return;
+                }
+
                 showMenu(option.dataset.menu);
             });
         });
     }, 100);
 }
+
+
+
+
+
+
+function handleMenuClick(event) {
+    const section = event.currentTarget.dataset.menu;
+
+    if (section === "userMenu") {
+        console.log("🟢 Abriendo User Menu desde handleMenuClick()");
+        openUserMenu();
+        return;
+    }
+
+    if (section) {
+        console.log(`🟢 Se hizo clic en: ${event.currentTarget.innerText}`);
+        console.log(`🔄 Cambiando hash a: #${section}`);
+
+        history.pushState({ page: section }, "", `#${section}`);
+        updateView(section);
+    } else {
+        console.warn(`⚠️ No se encontró data-menu en: ${event.currentTarget.innerText}`);
+    }
+}
+
+
+
+
 
 
 // Redirigir a la autenticación de 42 (datos fake)
@@ -329,6 +384,7 @@ function loginWithIntra() {
     // 🔹 Simulación de login exitoso
     setTimeout(() => {
         activateMenus(); // Desbloquea el acceso al juego
+        applyLanguage(localStorage.getItem("language") || "en");
         closeLoginMenu(); // Cierra la ventana de login
     }, 1000);
 }
@@ -376,6 +432,44 @@ function sendSignInRequest(email, password) {
     }, 1000);
 }
 
+function handleSignUp() {
+    const username = document.getElementById("signUpUsername").value.trim();
+    const email = document.getElementById("signUpEmail").value.trim();
+    const password = document.getElementById("signUpPassword").value.trim();
+
+    // 🔹 Validaciones básicas antes de enviar
+    if (username.length < 3) {
+        alert("❌ Username must be at least 3 characters long.");
+        return;
+    }
+    if (!validateEmail(email)) {
+        alert("❌ Please enter a valid email.");
+        return;
+    }
+    if (password.length < 6) {
+        alert("❌ Password must be at least 6 characters long.");
+        return;
+    }
+
+    console.log("✅ Sign up successful. Sending data...");
+
+    // 🔹 Simulación de registro en el backend
+    sendSignUpRequest(username, email, password);
+}
+
+
+// 🔹 Simulación de envío de datos de Sign up al backend
+function sendSignUpRequest(username, email, password) {
+    console.log(`🔵 Sending Sign Up: Username: ${username}, Email: ${email}, Password: ${password}`);
+
+    // Simulación de respuesta del servidor
+    setTimeout(() => {
+        alert(`✅ Welcome, ${username}! Your account has been created.`);
+        activateMenus(); // Habilita el acceso al juego
+        closeLoginMenu(); // Cierra el menú de login
+    }, 1000);
+}
+
 // COn el forgot your password. Simulacion de envio de reset link
 function resetPassword() {
     console.log("🔵 Se ha hecho clic en 'Reset Password'");
@@ -384,39 +478,70 @@ function resetPassword() {
 
 // Para cerrar el menu
 function closeLoginMenu() {
-    console.log("🔴 Se está cerrando el menú de login.");
+    console.log("🔴 Cerrando menú de login. Verificando estado de los menús antes de cerrar...");
+    document.querySelectorAll(".option-box").forEach(option => {
+        console.log("📌 Estado antes de cerrar menú:", option.innerText, "| Opacidad:", option.style.opacity, "| Pointer Events:", option.style.pointerEvents);
+    });
+
     let loginOptions = document.getElementById("loginOptions");
     loginOptions.classList.remove("visible");
-    loginOptions.style.display = "none"; // 🔹 Ahora se oculta completamente
+    loginOptions.style.display = "none"; 
 }
+
 
 
 // Habilitar los menús después del login
 function activateMenus() {
     console.log("🟢 Activando menús...");
 
-    // 🔹 Desbloquear los menús del juego
-    document.querySelectorAll(".option-box").forEach(option => {
-        option.classList.remove("inactive");
-        option.style.pointerEvents = "auto";
-    });
+    isLoggedIn = true; // Marcamos al usuario como logeado
 
-    // 🔹 Buscar el loginBox y cambiar el contenido
+    // 🔹 Asegurar que el loginBox se actualiza correctamente
     const loginBox = document.getElementById("loginBox");
+    console.log("🔍 Antes del cambio, loginBox:", loginBox.innerHTML);
+
     loginBox.innerHTML = `<span id="userWelcome">Welcome, <strong>Player</strong></span>`;
 
-    // 🔹 Asegurar que el evento de clic se agregue solo una vez
+    console.log("✅ Después del cambio, loginBox:", loginBox.innerHTML);
+
+    // 🔹 Asegurar que el evento de clic en "Welcome, Player" se asigne correctamente
     const userWelcome = document.getElementById("userWelcome");
     if (userWelcome) {
-        userWelcome.removeEventListener("click", openUserMenu); 
+        userWelcome.removeEventListener("click", openUserMenu);
         userWelcome.addEventListener("click", openUserMenu);
     }
 
-    // ✅ Ahora abrimos el menú de usuario tras un pequeño retraso
+    // 🔹 Asegurar que los menús sean clickeables
+    document.querySelectorAll(".option-box").forEach(option => {
+        if (!option.classList.contains("no-border")) { 
+            option.classList.remove("inactive");
+            option.style.pointerEvents = "auto";  
+            option.style.opacity = "1";  
+
+            console.log(`✅ Activado: ${option.innerText} | Opacidad: ${option.style.opacity} | Pointer Events: ${option.style.pointerEvents}`);
+        }
+    });
+
+    // 🔹 Cambiar el hash a "#loged" para indicar que el usuario está logeado
+    history.replaceState(null, "", "#loged");
+
+    // 🔹 Forzar la actualización de la vista
     setTimeout(() => {
+        updateView("loged");
+    }, 50);
+
+    // 🔹 Abrir automáticamente el menú de usuario tras un pequeño retraso
+    setTimeout(() => {
+        console.log("🟢 Abriendo menú de usuario tras login...");
         openUserMenu();
     }, 200);
 }
+
+
+
+
+
+
 
 
 
@@ -441,53 +566,131 @@ function openUserMenu() {
 
 
 
+
+
+
 // Necesitaremos una funcion de deslogeo
 function logoutUser() {
-    console.log("🔴 Se ha hecho clic en Log out. Cerrando sesión...");
+    console.log("🔴 logoutUser() se está ejecutando...");
     
-    // ✅ Reiniciar la UI completamente
-    resetUI();
+    isLoggedIn = false;
+    localStorage.removeItem("userSession"); // Borra cualquier sesión guardada (si se usa localStorage)
+    
+    location.reload(); // 👈 Recargar la página para un "reset total"
 }
 
 
-function resetUI() {
-    console.log("🔄 Reiniciando interfaz...");
 
-    // 🔹 Bloquear nuevamente los menús
-    document.querySelectorAll(".option-box").forEach(option => {
-        if (option.id !== "loginBox") {
-            option.classList.add("inactive");
-            option.style.pointerEvents = "none";
+
+
+
+
+// Función para aplicar las traducciones a los elementos que tienen el atributo "data-translate"
+function applyLanguage(language) {
+    localStorage.setItem("language", language); // Guardamos el idioma seleccionado
+
+    // Actualizar todos los elementos que tengan data-translate
+    document.querySelectorAll("[data-translate]").forEach((element) => {
+        const key = element.getAttribute("data-translate");
+
+        // ❌ Evitar sobrescribir loginBox si el usuario está logeado
+        if (element.id === "loginBox" && isLoggedIn) {
+            console.warn("⚠️ Omitiendo traducción de loginBox porque el usuario ya está logeado.");
+            return;
+        }
+        
+        if (translations[language] && translations[language][key]) {
+            element.textContent = translations[language][key];
         }
     });
 
-    // 🔹 Restaurar el loginBox al estado inicial
-    const loginBox = document.getElementById("loginBox");
-    loginBox.innerHTML = "Log in / Sign in";
-
-    // ✅ Asegurar que el botón sigue siendo interactivo
-    loginBox.classList.remove("inactive");
-    loginBox.style.pointerEvents = "auto";
-
-    // 🔹 Asegurar que loginOptions está oculto y listo para mostrarse
     let loginOptions = document.getElementById("loginOptions");
-    loginOptions.classList.remove("visible");
-    loginOptions.style.display = "none"; // 🔹 Ocultarlo por completo antes de reactivar
 
-    // ✅ Evitar eventos duplicados eliminando el viejo y creando uno nuevo
-    const newLoginBox = loginBox.cloneNode(true);
-    loginBox.parentNode.replaceChild(newLoginBox, loginBox);
-
-    // 🔹 Reasignar el evento de clic al nuevo loginBox
-    newLoginBox.addEventListener("click", function () {
-        console.log("🟢 Se ha hecho clic en Log in / Sign in");
-        if (!loginOptions.classList.contains("visible")) {
-            loginOptions.classList.add("visible");
-            loginOptions.style.display = "block"; // 🔹 FORZAR VISIBILIDAD DEL MENÚ
-            showMenu("main");
-        }
-    });
-
-    // 🔹 Cerrar el menú de usuario si estaba abierto
-    closeLoginMenu();
+    // ✅ Solo cerramos y reabrimos el menú si el usuario NO está logeado
+    if (!isLoggedIn && loginOptions.classList.contains("visible")) {
+        loginOptions.classList.remove("visible");
+        setTimeout(() => showMenu("main"), 300); // Reabrir menú traducido
+    }
+    // ✅ Si el usuario está logeado y tiene el menú de usuario abierto, lo actualizamos sin cerrarlo
+    else if (isLoggedIn && loginOptions.classList.contains("visible")) {
+        showMenu("userMenu"); // Asegurar que el menú de usuario no desaparezca
+    }
 }
+
+
+
+/* LAS TRADUCCIONES */
+// Definir las traducciones
+const translations = {
+    en: {
+        "login": "Log in / Sign up",
+        "welcome-player": "Welcome, Player",
+        "user-options": "User Options",
+        "profile-settings": "Profile Settings",
+        "logout": "Log out",
+        "tournament": "Tournament",
+        "settings": "Settings",
+        "credits": "Credits",
+        "language": "Language",
+        "sign-up": "Sign up",
+        "sign-in": "Sign in with email",
+        "already-42": "Already a 42 member? Log in with intra",
+        "forgot-password": "Forgot your password?",
+        "create-account": "Create an Account",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "sign-up-button": "Sign up",
+        "reset-password": "Reset your password",
+        "send-reset": "Send reset link",
+        "back": "← Back"
+    },
+    es: {
+        "login": "Iniciar sesión / Registrarse",
+        "welcome-player": "Bienvenido, Jugador",
+        "user-options": "Opciones de usuario",
+        "profile-settings": "Configuración del perfil",
+        "logout": "Cerrar sesión",
+        "tournament": "Torneo",
+        "settings": "Configuraciones",
+        "credits": "Créditos",
+        "language": "Idioma",
+        "sign-up": "Registrarse",
+        "sign-in": "Iniciar sesión con email",
+        "already-42": "¿Ya eres miembro de 42? Iniciar sesión con intra",
+        "forgot-password": "¿Olvidaste tu contraseña?",
+        "create-account": "Crear una cuenta",
+        "username": "Nombre de usuario",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "sign-up-button": "Registrarse",
+        "reset-password": "Restablecer tu contraseña",
+        "send-reset": "Enviar enlace de restablecimiento",
+        "back": "← Volver"
+    },
+    fr: {
+        "login": "Connexion / Inscription",
+        "welcome-player": "Bienvenue, Joueur",
+        "user-options": "Options de l'utilisateur",
+        "profile-settings": "Paramètres du profil",
+        "logout": "Se déconnecter",
+        "tournament": "Tournoi",
+        "settings": "Paramètres",
+        "credits": "Crédits",
+        "language": "Langue",
+        "sign-up": "S'inscrire",
+        "sign-in": "Se connecter avec email",
+        "already-42": "Déjà membre de 42 ? Connexion avec intra",
+        "forgot-password": "Mot de passe oublié?",
+        "create-account": "Créer un compte",
+        "username": "Nom d'utilisateur",
+        "email": "Email",
+        "password": "Mot de passe",
+        "sign-up-button": "S'inscrire",
+        "reset-password": "Réinitialiser votre mot de passe",
+        "send-reset": "Envoyer le lien de réinitialisation",
+        "back": "← Retour"
+    }
+};
+
+
