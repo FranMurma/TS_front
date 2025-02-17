@@ -235,6 +235,79 @@ canvas {
     z-index: 0;
 }
 
+
+/* 🔹 Menú desplegable de Play (misma estructura que login-options) */
+#playMenu {
+    position: absolute;
+    top: 0; /* Ajustaremos esto dinámicamente con JS */
+    left: 100%; /* Justo después del botón de Play */
+    width: 280px; /* Mismo ancho que loginOptions */
+    background-color: rgba(39, 33, 35, 0.9);
+    border-right: 3px solid var(--green-bright);
+    border-top: 3px solid var(--green-bright);
+    border-radius: 0 5mm 5mm 5mm;
+    padding: 15px;
+    opacity: 0;
+    visibility: hidden;
+    transform: scaleY(0);
+    transform-origin: top;
+    box-shadow: 5px 0px 10px rgba(0, 255, 0, 0.3);
+    transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+/* 🔹 Cuando el menú de Play está visible */
+#playMenu.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: scaleY(1);
+}
+
+/* 🔹 Opciones dentro del menú de Play */
+.play-option {
+    padding: 10px;
+    text-align: left;
+    background: rgba(0, 255, 0, 0.1);
+    border-radius: 3mm;
+    cursor: pointer;
+    margin-bottom: 5px;
+    transition: background 0.3s ease-in-out;
+}
+
+.play-option:hover {
+    background: rgba(0, 255, 0, 0.3);
+}
+
+
+.separator {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--green-bright), transparent);
+    margin: 5px auto;
+}
+
+
+hr {
+    width: 90%;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+
+#toggle-2fa {
+    background: rgba(255, 255, 255, 0.1);
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 3mm;
+    transition: background 0.3s ease-in-out;
+}
+
+#toggle-2fa:hover {
+    background: rgba(255, 0, 0, 0.2);
+}
+
+
 /* 🔹 En tablets (menos de 1024px), eliminamos UNA columna Matrix */
 @media (max-width: 1024px) {
     .matrix-effect,

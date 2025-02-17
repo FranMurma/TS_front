@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentLanguage = localStorage.getItem("language") || "en";
     const languageSelector = document.getElementById("languageSelector");
     const languageBox = document.getElementById("languageBox");
+    const playButton = document.querySelector("[data-menu='play']");
 
     if (languageSelector) {
         languageSelector.value = currentLanguage;
@@ -223,12 +224,86 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    console.log("🔄 Inicializando eventos de navegación...");
+    if (playButton) {
+        // 🔹 Crear dinámicamente el menú de Play
+        const playMenu = document.createElement("div");
+        playMenu.id = "playMenu";
+        playMenu.classList.add("login-options"); // Misma clase que el menú de Log in
+        playMenu.innerHTML = `
+            <p class="play-option" data-mode="solo-ai">Solo vs AI</p>
+            <div class="separator"></div>
+            <p class="play-option" data-mode="local">One v One Local</p>
+            <div class="separator"></div>
+            <p class="play-option" data-mode="online">One v One Online</p>
+            <div class="separator"></div>
+            <p class="play-option" data-mode="create-tournament">Create Tournament</p>
+            <div class="separator"></div>
+            <p class="play-option" data-mode="join-tournament">Join Tournament</p>
+        `;
+        
+        // 🔹 Agregarlo al DOM después del botón de Play
+        playButton.parentNode.appendChild(playMenu);
 
+        // 🔹 Asegurar que el menú de Play se alinee con el botón
+        function positionPlayMenu() {
+            const rect = playButton.getBoundingClientRect();
+            playMenu.style.top = `${rect.top}px`; // Alinear con la parte superior del botón
+            playMenu.style.left = `${rect.right + 10}px`; // Justo después del botón (ajustable)
+        }
+
+        positionPlayMenu(); // Llamar una vez al inicio
+        window.addEventListener("resize", positionPlayMenu); // Ajustar si cambia el tamaño de la ventana
+
+
+        // Evento para abrir/cerrar el submenú al hacer clic en Play
+        playButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+        
+            // 🔹 Cerrar el menú de login si está abierto
+            const loginOptions = document.getElementById("loginOptions");
+            if (loginOptions.classList.contains("visible")) {
+                loginOptions.classList.remove("visible");
+            }
+        
+            // 🔹 Alternar la visibilidad del menú de Play
+            playMenu.classList.toggle("visible");
+        
+            // 🔹 Cambiar el hash en la URL para reflejar que estamos en el menú de Play
+            if (playMenu.classList.contains("visible")) {
+                history.pushState(null, "", "#play-menu");
+            } else {
+                history.pushState(null, "", "#loged"); // Volver al estado logeado si se cierra
+            }
+        });
+        
+        
+
+        // 🔹 Evento para cerrar el menú al hacer clic fuera
+        document.addEventListener("click", function (event) {
+            if (!playMenu.contains(event.target) && event.target !== playButton) {
+                playMenu.classList.remove("visible");
+            }
+        });
+
+        // 🔹 Manejo de clics en las opciones del submenú
+        playMenu.querySelectorAll(".play-option").forEach(option => {
+            option.addEventListener("click", function (event) {
+                event.stopPropagation();
+                console.log(`🎮 Opción seleccionada: ${option.dataset.mode}`);
+                playMenu.classList.remove("visible"); // Ocultar después de seleccionar
+            });
+        });
+    }
+
+
+    // 🔄 Inicializando eventos de navegación...
+    console.log("🔄 Inicializando eventos de navegación...");
     document.querySelectorAll(".menu-option").forEach(option => {
         option.addEventListener("click", handleMenuClick);
     });
-});
+
+}); // ✅ Aquí cierra correctamente el `DOMContentLoaded`
+
 
 
 
@@ -351,11 +426,25 @@ function showMenu(menu) {
     else if (menu === "userMenu") {
         menuContent = `
             <p class="submenu-text" data-text="user-options">${translations[lang]["user-options"]}</p>
-            <p class="login-option" data-menu="profile" data-text="profile-settings">${translations[lang]["profile-settings"]}</p>
+            <p class="login-option" data-menu="profile-settings" data-text="profile-settings">${translations[lang]["profile-settings"]}</p>
             <div class="separator"></div>
             <p class="login-option" data-menu="logout" data-text="logout">${translations[lang]["logout"]}</p>
         `;
     }
+    else if (menu === "profile-settings") {
+        menuContent = `
+            <p class="submenu-text" data-text="edit-profile">${translations[lang]["edit-profile"] || "Edit Profile"}</p>
+            <p class="login-option" data-menu="edit-username" data-text="edit-username">${translations[lang]["edit-username"] || "Edit Username"}</p>
+            <p class="login-option" data-menu="edit-email" data-text="edit-email">${translations[lang]["edit-email"] || "Edit Email"}</p>
+            <p class="login-option" data-menu="edit-password" data-text="edit-password">${translations[lang]["edit-password"] || "Edit Password"}</p>
+            <div class="separator"></div>
+            <p class="login-option" id="toggle-2fa" data-text="toggle-2fa">${translations[lang]["toggle-2fa"] || "Enable 2FA"}</p>
+            <div class="separator"></div>
+            <p class="back-option" data-menu="userMenu" data-text="back">${translations[lang]["back"] || "← Back"}</p>
+        `;
+    }
+    
+    
 
     loginOptions.innerHTML = menuContent;
 
@@ -364,24 +453,55 @@ function showMenu(menu) {
         loginOptions.querySelectorAll(".login-option, .back-option").forEach(option => {
             option.addEventListener("click", function (event) {
                 event.stopPropagation();
-
-                // Si es "Log in with intra", ejecutamos la función directamente
+    
                 if (option.classList.contains("intra-login")) {
                     loginWithIntra();
                     return;
                 }
-
-                // Si es "Log out", llamamos a logoutUser()
+    
                 if (option.dataset.menu === "logout") {
                     console.log("⚠️ Clic en Log out detectado. Ejecutando logoutUser()...");
                     logoutUser();
                     return;
                 }
-
+    
+                // 📝 🔄 Manejamos directamente las opciones de edición sin cambiar de menú
+                if (option.dataset.menu === "edit-username") {
+                    let newUsername = prompt("Enter new username:");
+                    if (newUsername) console.log(`📝 Username changed to: ${newUsername}`);
+                    return;
+                }
+    
+                if (option.dataset.menu === "edit-password") {
+                    let newPassword = prompt("Enter new password:");
+                    if (newPassword) console.log("🔑 Password updated successfully.");
+                    return;
+                }
+    
+                if (option.dataset.menu === "edit-email") {
+                    let newEmail = prompt("Enter new email:");
+                    if (newEmail) console.log(`📧 Email updated to: ${newEmail}`);
+                    return;
+                }
+    
+                if (option.id === "toggle-2fa") {
+                    let is2FAEnabled = confirm("Do you want to enable Two-Factor Authentication?");
+                    if (is2FAEnabled) {
+                        console.log("✅ 2FA Enabled!");
+                        option.textContent = "Disable 2FA";
+                    } else {
+                        console.log("❌ 2FA Disabled.");
+                        option.textContent = "Enable 2FA";
+                    }
+                    return;
+                }
+    
+                // Si no es ninguna de estas acciones, cambiar de menú normalmente
                 showMenu(option.dataset.menu);
             });
         });
     }, 100);
+    
 }
 
 
@@ -398,6 +518,12 @@ function handleMenuClick(event) {
     }
 
     console.log(`🟢 Se hizo clic en: ${section}`);
+
+    // 🚨 Evitar que Play cambie el hash
+    if (section === "play") {
+        console.log("🎮 Click en Play: No cambiamos el hash, solo mostramos el submenú.");
+        return;
+    }
 
     // Verificar si el usuario está logeado antes de permitir navegar
     if (!isLoggedIn && section !== "login") {
@@ -417,6 +543,7 @@ function handleMenuClick(event) {
     // ✅ Cambiar el hash (esto activará el evento hashchange y llamará a updateView automáticamente)
     location.hash = section;
 }
+
 
 
 
@@ -600,16 +727,18 @@ function openUserMenu() {
     console.log("🟢 Abriendo menú de usuario...");
 
     let loginOptions = document.getElementById("loginOptions");
+    let playMenu = document.getElementById("playMenu"); // 🔹 Referencia al menú de Play
+
+    if (playMenu && playMenu.classList.contains("visible")) {
+        console.log("🔴 Cerrando Play Menu antes de abrir User Menu...");
+        playMenu.classList.remove("visible");
+    }
 
     if (isLoggedIn) {
-        // ✅ Antes de abrir, asegurarnos de que no haya otro menú flotante visible
-        closeLoginMenu();
-
         showMenu("userMenu");
         loginOptions.classList.add("visible");
         loginOptions.style.display = "block";
 
-        // ✅ Actualizar el hash solo si no está ya en #user-menu
         if (location.hash !== "#user-menu") {
             history.pushState(null, "", "#user-menu");
         }
@@ -618,6 +747,7 @@ function openUserMenu() {
         showMenu("main");
     }
 }
+
 
 
 
@@ -698,10 +828,30 @@ function applyLanguage(language) {
     let loginOptions = document.getElementById("loginOptions");
 
     // ✅ Solo cerramos y reabrimos el menú si el usuario NO está logeado
-    if (!isLoggedIn && loginOptions.classList.contains("visible")) {
-        loginOptions.classList.remove("visible");
-        setTimeout(() => showMenu("main"), 300); // Reabrir menú traducido
+    if (loginBox && loginOptions) {
+        loginBox.addEventListener("click", function (event) {
+            event.stopPropagation();
+    
+            if (isLoggedIn) {
+                console.log("🟢 Usuario logeado, abriendo menú de usuario...");
+                openUserMenu(); // Mostrar menú de usuario en vez del de login
+            } else {
+                console.log("🔴 Usuario no logeado, mostrando opciones de login...");
+    
+                // 🔹 Cerrar el menú de Play si está abierto
+                const playMenu = document.getElementById("playMenu");
+                if (playMenu && playMenu.classList.contains("visible")) {
+                    playMenu.classList.remove("visible");
+                }
+    
+                if (!loginOptions.classList.contains("visible")) {
+                    loginOptions.classList.add("visible");
+                    showMenu("main");
+                }
+            }
+        });
     }
+    
     // ✅ Si el usuario está logeado y tiene el menú de usuario abierto, lo actualizamos sin cerrarlo
     else if (isLoggedIn && loginOptions.classList.contains("visible")) {
         showMenu("userMenu"); // Asegurar que el menú de usuario no desaparezca
@@ -719,7 +869,7 @@ const translations = {
         "user-options": "User Options",
         "profile-settings": "Profile Settings",
         "logout": "Log out",
-        "tournament": "Tournament",
+        "play": "Play",
         "settings": "Settings",
         "credits": "Credits",
         "language": "Language",
@@ -742,7 +892,7 @@ const translations = {
         "user-options": "Opciones de usuario",
         "profile-settings": "Configuración del perfil",
         "logout": "Cerrar sesión",
-        "tournament": "Torneo",
+        "play": "Jugar",
         "settings": "Configuraciones",
         "credits": "Créditos",
         "language": "Idioma",
@@ -765,7 +915,7 @@ const translations = {
         "user-options": "Options de l'utilisateur",
         "profile-settings": "Paramètres du profil",
         "logout": "Se déconnecter",
-        "tournament": "Tournoi",
+        "play": "Jouer",
         "settings": "Paramètres",
         "credits": "Crédits",
         "language": "Langue",
