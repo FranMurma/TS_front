@@ -84,6 +84,8 @@ function navigateTo(section) {
 
 
 function updateView(section) {
+    console.trace(`📌 updateView() llamado con sección: ${section}`);
+
     console.log(`🔄 Actualizando vista a: ${section}`);
 
     // Ocultar todas las secciones visibles
@@ -102,7 +104,9 @@ function updateView(section) {
             logedSection = document.createElement("div");
             logedSection.id = "loged";
             logedSection.classList.add("view-section");
-            logedSection.innerHTML = `<h2 data-translate="welcome-player">${translations[localStorage.getItem("language") || "en"]["welcome-player"]}</h2>`;
+            if (!document.getElementById("userWelcome")) {
+                logedSection.innerHTML = `<h2 data-translate="welcome-player">${translations[localStorage.getItem("language") || "en"]["welcome-player"]}</h2>`;
+            }
             document.body.appendChild(logedSection);
             console.log("✅ Se ha creado dinámicamente la sección #loged");
         }
@@ -136,6 +140,11 @@ function updateView(section) {
     console.log(`✅ Mostrando sección: ${section}`);
     activeSection.style.display = 'block';
 }
+
+
+
+
+
 
 
 
@@ -191,30 +200,60 @@ document.addEventListener("DOMContentLoaded", function () {
     if (loginBox && loginOptions) {
         loginBox.addEventListener("click", function (event) {
             event.stopPropagation();
-            if (!loginOptions.classList.contains("visible")) {
-                loginOptions.classList.add("visible");
-                showMenu("main");
+
+            if (isLoggedIn) {
+                console.log("🟢 Usuario logeado, abriendo menú de usuario...");
+                openUserMenu(); // Mostrar menú de usuario en vez del de login
+            } else {
+                console.log("🔴 Usuario no logeado, mostrando opciones de login...");
+                if (!loginOptions.classList.contains("visible")) {
+                    loginOptions.classList.add("visible");
+                    showMenu("main");
+                }
             }
         });
     }
+
+    // 🟢 5. Asegurar que el menú de usuario se abre correctamente
+    const userWelcome = document.getElementById("userWelcome");
+    if (userWelcome) {
+        userWelcome.addEventListener("click", function (event) {
+            event.stopPropagation(); // Evita que el clic cierre el menú inmediatamente
+            openUserMenu();
+        });
+    }
+
+    console.log("🔄 Inicializando eventos de navegación...");
+
+    document.querySelectorAll(".menu-option").forEach(option => {
+        option.addEventListener("click", handleMenuClick);
+    });
 });
 
 
 
 
+
+// Restaurar la navegación con hashchange
 // Restaurar la navegación con hashchange
 window.addEventListener("hashchange", function() {
     let section = location.hash.replace("#", "") || "login";
-    console.log(`🔄 (hashchange) Se detectó cambio de hash a: ${section}`);
+    console.log(`🔄 (hashchange) Cambio detectado: ${section}`);
 
-    // 🛠️ Si el usuario no está logeado y trata de ir a "loged", corregimos a "login"
+    // Si ya estamos en esta sección, no hacer nada
+    if (document.querySelector(".view-section[style*='block']")?.id === section) {
+        console.warn(`⚠️ updateView(${section}) bloqueado, ya estamos en esta sección.`);
+        return;
+    }
+
+    // Si el usuario no está logeado y trata de ir a "loged", corregimos a "login"
     if (!isLoggedIn && section === "loged") {
         console.warn("⚠️ Intento de acceder a loged sin estar logeado. Redirigiendo a login.");
         section = "login";
         history.replaceState(null, "", "#login");
     }
 
-    // 🛠️ Validamos si la sección realmente existe en el DOM
+    // Validamos si la sección realmente existe en el DOM
     if (!document.getElementById(section)) {
         console.warn(`⚠️ Se intentó acceder a una sección inexistente: #${section}. Redirigiendo a login.`);
         section = "login";
@@ -227,20 +266,26 @@ window.addEventListener("hashchange", function() {
 
 
 
+
+
+
 // Cerrar el menú de usuario cuando se hace clic fuera
 document.addEventListener("click", function(event) {
     const userMenu = document.getElementById("userWelcome");
     const loginOptions = document.getElementById("loginOptions");
 
-    // Si el User Menu está abierto y el clic NO fue en el User Menu ni en su contenido, lo cerramos
+    // Si hay un menú abierto y el clic NO fue en el menú ni en el usuario, se cierra
     if (loginOptions.classList.contains("visible") && 
         event.target !== userMenu && 
+        !userMenu.contains(event.target) && 
         !loginOptions.contains(event.target)) {
         
         console.log("🔴 Clic fuera del User Menu. Cerrando...");
         loginOptions.classList.remove("visible");
+        loginOptions.style.display = "none";
     }
 });
+
 
 
 
@@ -347,22 +392,33 @@ function showMenu(menu) {
 function handleMenuClick(event) {
     const section = event.currentTarget.dataset.menu;
 
-    if (section === "userMenu") {
-        console.log("🟢 Abriendo User Menu desde handleMenuClick()");
-        openUserMenu();
+    if (!section) {
+        console.warn("⚠️ No se encontró data-menu en:", event.currentTarget.innerText);
         return;
     }
 
-    if (section) {
-        console.log(`🟢 Se hizo clic en: ${event.currentTarget.innerText}`);
-        console.log(`🔄 Cambiando hash a: #${section}`);
+    console.log(`🟢 Se hizo clic en: ${section}`);
 
-        history.pushState({ page: section }, "", `#${section}`);
-        updateView(section);
-    } else {
-        console.warn(`⚠️ No se encontró data-menu en: ${event.currentTarget.innerText}`);
+    // Verificar si el usuario está logeado antes de permitir navegar
+    if (!isLoggedIn && section !== "login") {
+        console.warn(`⛔ Acceso denegado a '${section}', usuario no autenticado.`);
+        return;
     }
+
+    // Si ya estamos en la misma sección, no hacer nada
+    if (location.hash === `#${section}`) {
+        console.warn(`⚠️ Ya estamos en ${section}, evitando cambio innecesario.`);
+        return;
+    }
+
+    // ✅ Cerrar el menú de usuario antes de cambiar de sección
+    closeLoginMenu();
+
+    // ✅ Cambiar el hash (esto activará el evento hashchange y llamará a updateView automáticamente)
+    location.hash = section;
 }
+
+
 
 
 
@@ -476,66 +532,57 @@ function resetPassword() {
     alert("✅ Simulación: Se enviaría un email con el enlace de recuperación.");
 }
 
-// Para cerrar el menu
-function closeLoginMenu() {
-    console.log("🔴 Cerrando menú de login. Verificando estado de los menús antes de cerrar...");
-    document.querySelectorAll(".option-box").forEach(option => {
-        console.log("📌 Estado antes de cerrar menú:", option.innerText, "| Opacidad:", option.style.opacity, "| Pointer Events:", option.style.pointerEvents);
-    });
 
-    let loginOptions = document.getElementById("loginOptions");
-    loginOptions.classList.remove("visible");
-    loginOptions.style.display = "none"; 
-}
-
-
-
-// Habilitar los menús después del login
 function activateMenus() {
     console.log("🟢 Activando menús...");
 
     isLoggedIn = true; // Marcamos al usuario como logeado
 
-    // 🔹 Asegurar que el loginBox se actualiza correctamente
     const loginBox = document.getElementById("loginBox");
-    console.log("🔍 Antes del cambio, loginBox:", loginBox.innerHTML);
 
-    loginBox.innerHTML = `<span id="userWelcome">Welcome, <strong>Player</strong></span>`;
-
-    console.log("✅ Después del cambio, loginBox:", loginBox.innerHTML);
-
-    // 🔹 Asegurar que el evento de clic en "Welcome, Player" se asigne correctamente
-    const userWelcome = document.getElementById("userWelcome");
-    if (userWelcome) {
-        userWelcome.removeEventListener("click", openUserMenu);
-        userWelcome.addEventListener("click", openUserMenu);
+    // ✅ Verificar si #userWelcome ya existe antes de agregarlo
+    let userWelcome = document.getElementById("userWelcome");
+    if (!userWelcome) {
+        console.log("🔍 No existe #userWelcome. Agregándolo en loginBox...");
+        loginBox.innerHTML = `<span id="userWelcome">Welcome, <strong>Player</strong></span>`;
+        userWelcome = document.getElementById("userWelcome"); // Lo reasignamos después de crearlo
+    } else {
+        console.log("⚠️ #userWelcome ya existe, no lo agregamos de nuevo.");
     }
 
-    // 🔹 Asegurar que los menús sean clickeables
+    // ✅ Asegurar que "Welcome, Player" tenga evento de clic solo una vez
+    userWelcome.removeEventListener("click", openUserMenu); // Eliminar posibles eventos duplicados
+    userWelcome.addEventListener("click", function (event) {
+        console.log("🟢 Se ha hecho clic en Welcome Player. Abriendo User Menu...");
+        openUserMenu();
+        event.stopPropagation(); // ✅ Evita que el clic se propague y cierre el menú inmediatamente
+    });
+
+    // ✅ Activar opciones de menú
     document.querySelectorAll(".option-box").forEach(option => {
         if (!option.classList.contains("no-border")) { 
             option.classList.remove("inactive");
             option.style.pointerEvents = "auto";  
             option.style.opacity = "1";  
-
-            console.log(`✅ Activado: ${option.innerText} | Opacidad: ${option.style.opacity} | Pointer Events: ${option.style.pointerEvents}`);
         }
     });
 
-    // 🔹 Cambiar el hash a "#loged" para indicar que el usuario está logeado
+    // ✅ Cambiar el hash a "#loged" para indicar que el usuario está logeado
     history.replaceState(null, "", "#loged");
 
-    // 🔹 Forzar la actualización de la vista
+    // ✅ Forzar la actualización de la vista
     setTimeout(() => {
         updateView("loged");
     }, 50);
-
-    // 🔹 Abrir automáticamente el menú de usuario tras un pequeño retraso
-    setTimeout(() => {
-        console.log("🟢 Abriendo menú de usuario tras login...");
-        openUserMenu();
-    }, 200);
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -554,13 +601,27 @@ function openUserMenu() {
 
     let loginOptions = document.getElementById("loginOptions");
 
-    // 🔹 Asegurar visibilidad
-    loginOptions.classList.add("visible");
-    loginOptions.style.display = "block"; 
+    if (isLoggedIn) {
+        // ✅ Antes de abrir, asegurarnos de que no haya otro menú flotante visible
+        closeLoginMenu();
 
-    // 🔹 Mostrar las opciones de usuario
-    showMenu("userMenu");
+        showMenu("userMenu");
+        loginOptions.classList.add("visible");
+        loginOptions.style.display = "block";
+
+        // ✅ Actualizar el hash solo si no está ya en #user-menu
+        if (location.hash !== "#user-menu") {
+            history.pushState(null, "", "#user-menu");
+        }
+    } else {
+        console.warn("⚠️ Intento de abrir menú de usuario sin estar logeado. Abriendo login.");
+        showMenu("main");
+    }
 }
+
+
+
+
 
 
 
@@ -578,6 +639,36 @@ function logoutUser() {
     
     location.reload(); // 👈 Recargar la página para un "reset total"
 }
+
+
+
+function closeLoginMenu() {
+    console.log("🔴 Cerrando menú de usuario...");
+
+    let loginOptions = document.getElementById("loginOptions");
+
+    if (loginOptions) {
+        loginOptions.classList.remove("visible");
+        loginOptions.style.display = "none";
+
+        // ✅ Asegurar que el contenido del menú se vacíe para evitar restos visuales
+        loginOptions.innerHTML = "";
+    }
+
+    let userMenu = document.getElementById("userWelcome");
+    if (userMenu) {
+        console.log("🔴 Ocultando User Menu...");
+        userMenu.classList.remove("active");  
+    }
+
+    // ✅ Asegurar que no haya restos en el DOM
+    let floatingMenu = document.querySelector(".floating-menu");
+    if (floatingMenu) {
+        console.log("🗑️ Eliminando restos de menús flotantes...");
+        floatingMenu.remove();
+    }
+}
+
 
 
 
@@ -692,5 +783,3 @@ const translations = {
         "back": "← Retour"
     }
 };
-
-
