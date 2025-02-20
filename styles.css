@@ -279,13 +279,6 @@ canvas {
 }
 
 
-.separator {
-    height: 2px;
-    width: 100%;
-    background: linear-gradient(90deg, var(--green-bright), transparent);
-    margin: 5px auto;
-}
-
 
 hr {
     width: 90%;
@@ -306,6 +299,100 @@ hr {
 #toggle-2fa:hover {
     background: rgba(255, 0, 0, 0.2);
 }
+
+
+/* Efecto de resplandor para la opción activa del menú */
+.menu-option.active,
+[data-menu='play'].active {
+    color: #00ff00; /* Verde brillante */
+    font-weight: bold;
+    text-shadow: 0px 0px 8px rgba(0, 255, 0, 0.8);
+    background: rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+    border-radius: 10px; /* Mantiene la forma redondeada */
+    transition: background 0.3s ease-in-out, border 0.2s ease-in-out;
+}
+
+#loginBox.active {
+    box-sizing: border-box;
+    background: rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+    text-shadow: 0px 0px 8px rgba(0, 255, 0, 0.8);
+    animation: subtleGlow 1.5s infinite alternate;
+}
+
+
+/* Efecto de resplandor pulsante */
+@keyframes subtleGlow {
+    0% { box-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
+    50% { box-shadow: 0px 0px 12px rgba(0, 255, 0, 0.6); }
+    100% { box-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
+}
+
+.menu-option.active,
+[data-menu='play'].active {
+    animation: subtleGlow 1.5s infinite alternate;
+}
+
+
+
+/* 🔹 Asegurar que `#loginBox` mantiene su tamaño original */
+#loginBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+}
+
+/* 🔹 `#userWelcome` ocupa todo el `#loginBox` */
+#userWelcome {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    text-align: center;
+    background: transparent;
+    border: none;
+}
+
+/* 🔹 Aplicar la iluminación SOLO a `#loginBox` */
+#loginBox.active {
+    color: #00ff00;
+    font-weight: bold;
+    text-shadow: 0px 0px 8px rgba(0, 255, 0, 0.8);
+    background: rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    transition: background 0.3s ease-in-out, border 0.2s ease-in-out;
+    animation: subtleGlow 1.5s infinite alternate;
+}
+
+/* 🔹 Evitar efectos duplicados en el texto */
+#userWelcome strong {
+    font-weight: bold;
+    text-shadow: none;
+    background: transparent;
+}
+
+/* 🔹 Animación de iluminación */
+@keyframes subtleGlow {
+    0% { box-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
+    50% { box-shadow: 0px 0px 12px rgba(0, 255, 0, 0.6); }
+    100% { box-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
+}
+
+
+
+
+
+
 
 
 /* 🔹 En tablets (menos de 1024px), eliminamos UNA columna Matrix */
