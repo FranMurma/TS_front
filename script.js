@@ -1,3 +1,4 @@
+
 // 🎥 Efecto Matrix en los fondos, columna 1 y 12
 function createMatrixEffect(canvasId) {
     const canvas = document.getElementById(canvasId);
@@ -210,15 +211,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (loginBox && loginOptions) {
         loginBox.addEventListener("click", function (event) {
             event.stopPropagation();
-
+    
             if (isLoggedIn) {
                 console.log("🟢 Usuario logeado, abriendo menú de usuario...");
                 openUserMenu(); // Mostrar menú de usuario en vez del de login
             } else {
                 console.log("🔴 Usuario no logeado, mostrando opciones de login...");
+                
+                // 🔹 Asegurar que las opciones de login se regeneran
+                showMenu("main"); 
+                
                 if (!loginOptions.classList.contains("visible")) {
                     loginOptions.classList.add("visible");
-                    showMenu("main");
+                    loginOptions.style.display = "block"; // 🔹 Asegurar que es visible
                 }
             }
         });
@@ -247,34 +252,50 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     if (playButton) {
-        // 🔹 Crear dinámicamente el menú de Play
+        // 🔹 Crear dinámicamente el menú de Play con atributos data-text
         const playMenu = document.createElement("div");
         playMenu.id = "playMenu";
         playMenu.classList.add("login-options"); // Misma clase que el menú de Log in
         playMenu.innerHTML = `
-            <p class="play-option" data-mode="solo-ai">Solo vs AI</p>
+            <p class="play-option" data-mode="solo-ai" data-text="solo-ai"></p>
             <div class="separator"></div>
-            <p class="play-option" data-mode="local">One v One Local</p>
+            <p class="play-option" data-mode="local" data-text="local"></p>
             <div class="separator"></div>
-            <p class="play-option" data-mode="online">One v One Online</p>
+            <p class="play-option" data-mode="online" data-text="online"></p>
             <div class="separator"></div>
-            <p class="play-option" data-mode="create-tournament">Create Tournament</p>
+            <p class="play-option" data-mode="create-tournament" data-text="create-tournament"></p>
             <div class="separator"></div>
-            <p class="play-option" data-mode="join-tournament">Join Tournament</p>
+            <p class="play-option" data-mode="join-tournament" data-text="join-tournament"></p>
         `;
     
         // 🔹 Agregarlo al DOM después del botón de Play
         playButton.parentNode.appendChild(playMenu);
     
+        // 🔹 Aplicar traducciones iniciales al menú de Play
+        applyLanguage(localStorage.getItem("language") || "en");
+    
         // 🔹 Asegurar que el menú de Play se alinee con el botón
         function positionPlayMenu() {
             const rect = playButton.getBoundingClientRect();
-            playMenu.style.top = `${rect.top}px`; // Alinear con la parte superior del botón
-            playMenu.style.left = `${rect.right + 10}px`; // Justo después del botón (ajustable)
+            const isMobile = window.innerWidth <= 768; // 📌 Detectamos si la pantalla es pequeña
+    
+            if (isMobile) {
+                // 🔹 En móviles, el submenú se muestra debajo del botón de Play
+                playMenu.style.top = `${rect.bottom}px`;
+                playMenu.style.left = `${rect.left}px`;
+                playMenu.style.width = `${rect.width}px`; // Que ocupe el mismo ancho que el botón
+            } else {
+                // 🔹 En pantallas grandes, se mantiene a la derecha
+                playMenu.style.top = `${rect.top}px`;
+                playMenu.style.left = `${rect.right + 10}px`;
+            }
         }
     
-        positionPlayMenu(); // Llamar una vez al inicio
-        window.addEventListener("resize", positionPlayMenu); // Ajustar si cambia el tamaño de la ventana
+        // 🔹 Posicionar el menú una vez al inicio
+        positionPlayMenu();
+    
+        // 🔹 Ajustar la posición del Play Menu cuando se cambia el tamaño de la pantalla
+        window.addEventListener("resize", positionPlayMenu);
     
         // 🔹 Evento para abrir/cerrar el submenú al hacer clic en Play
         playButton.addEventListener("click", function (event) {
@@ -286,16 +307,18 @@ document.addEventListener("DOMContentLoaded", function () {
             if (userMenu && userMenu.classList.contains("visible")) {
                 console.log("🛑 User Menu está abierto, cerrándolo antes de abrir Play Menu.");
                 userMenu.classList.remove("visible");
+                userMenu.style.display = "none";
             }
     
-            // 🔹 Asegurar que el Play Menu se abre correctamente después del cierre del User Menu
-            setTimeout(() => {
-                playMenu.classList.toggle("visible");
-                console.log(playMenu.classList.contains("visible") ? "🟢 Play Menu abierto" : "🔴 Play Menu cerrado");
+            // 🔹 **Asegurar que se calcula la posición ANTES de mostrar el menú**
+            positionPlayMenu();
     
-                // 🔹 Actualizar el hash en la URL
-                history.pushState(null, "", playMenu.classList.contains("visible") ? "#play-menu" : "#loged");
-            }, 50);
+            // 🔹 **Ahora alternamos la visibilidad**
+            playMenu.classList.toggle("visible");
+            console.log(playMenu.classList.contains("visible") ? "🟢 Play Menu abierto" : "🔴 Play Menu cerrado");
+    
+            // 🔹 Actualizar el hash en la URL
+            history.pushState(null, "", playMenu.classList.contains("visible") ? "#play-menu" : "#loged");
         });
     
         // 🔹 Evento para cerrar el menú al hacer clic fuera
@@ -314,6 +337,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+    
     
     // 🔄 Inicializando eventos de navegación...
     console.log("🔄 Inicializando eventos de navegación...");
@@ -387,20 +411,20 @@ window.addEventListener("hashchange", function () {
 
 // Cerrar el menú de usuario cuando se hace clic fuera
 document.addEventListener("click", function(event) {
-    const userMenu = document.getElementById("userWelcome");
     const loginOptions = document.getElementById("loginOptions");
+    const loginBox = document.getElementById("loginBox");
 
-    // Si hay un menú abierto y el clic NO fue en el menú ni en el usuario, se cierra
+    // Si el menú de login está visible y el clic ocurre fuera del loginBox y loginOptions, se cierra.
     if (loginOptions.classList.contains("visible") && 
-        event.target !== userMenu && 
-        !userMenu.contains(event.target) && 
-        !loginOptions.contains(event.target)) {
+        !loginOptions.contains(event.target) && 
+        !loginBox.contains(event.target)) {
         
         console.log("🔴 Clic fuera del User Menu. Cerrando...");
-        loginOptions.classList.remove("visible");
-        loginOptions.style.display = "none";
+        closeLoginMenu();
     }
 });
+
+
 
 
 
@@ -418,8 +442,12 @@ document.addEventListener("click", function(event) {
 // Mostrar opciones del menú de login
 function showMenu(menu) {
     let loginOptions = document.getElementById("loginOptions");
+
+    if (!loginOptions) return;
+
     loginOptions.classList.add("visible");
-    loginOptions.innerHTML = ""; 
+    loginOptions.style.display = "block"; // 🔹 Asegurar que se vuelve a mostrar
+    loginOptions.innerHTML = ""; // 🔹 Limpiar antes de regenerar el contenido
 
     // Obtener el idioma actual
     const lang = localStorage.getItem("language") || "en";
@@ -866,7 +894,7 @@ function activateMenus() {
         }
     });
 
-    // 🔹 Cambiar solo el texto del botón en vez de reemplazarlo
+    // 🔹 Cambiar solo el texto del botón de Log In a "Welcome, Player"
     const loginBox = document.getElementById("loginBox");
     loginBox.innerHTML = "Welcome, <strong>Player</strong>";
 
@@ -874,10 +902,19 @@ function activateMenus() {
     loginBox.removeEventListener("click", openUserMenu);
     loginBox.addEventListener("click", openUserMenu);
 
-    // 🔹 Actualizar la UI
+    // 🔹 Cerrar el menú de Log In si está abierto
+    const loginOptions = document.getElementById("loginOptions");
+    if (loginOptions) {
+        loginOptions.classList.remove("visible");
+        loginOptions.style.display = "none";
+    }
+    
+    // 🔹 Actualizar la URL y la vista para evitar que se quede en Login
     history.replaceState(null, "", "#loged");
-    updateView("loged");
+    updateView("loged"); // 🔥 Asegurar que cambia de vista
 }
+
+
 
 
 
@@ -931,7 +968,7 @@ function handleCloseUserMenu(event) {
 //  Nueva función para mostrar el menú del usuario cuando estamos logeados.
 // Función para manejar el menú del usuario al hacer clic en "Welcome, Player"
 function openUserMenu(event) {
-    event.stopPropagation(); // 🛑 Evita que el clic cierre el menú inmediatamente
+    event.stopPropagation(); // Evita que el clic cierre inmediatamente la caja
     console.log("🟢 Se ha hecho clic en Welcome Player. Abriendo User Menu...");
 
     if (!isLoggedIn) {
@@ -940,15 +977,20 @@ function openUserMenu(event) {
         return;
     }
 
-    // 🔹 Referencia al contenedor del menú de login (donde se muestra userMenu)
-    let loginOptions = document.getElementById("loginOptions");
+    // 🔹 Cerrar el menú de Play si está abierto
+    const playMenu = document.getElementById("playMenu");
+    if (playMenu && playMenu.classList.contains("visible")) {
+        console.log("🔴 Play Menu está abierto, cerrándolo antes de abrir User Menu.");
+        playMenu.classList.remove("visible");
+    }
 
+    // 🔹 Mostrar el menú de usuario asegurando que sea visible
+    let loginOptions = document.getElementById("loginOptions");
     if (!loginOptions) {
         console.error("❌ No se encontró #loginOptions en el DOM.");
         return;
     }
 
-    // 🔹 Mostrar el menú de usuario asegurando que sea visible
     showMenu("userMenu");
     loginOptions.classList.add("visible");
     loginOptions.style.display = "block"; // Asegurar que no está oculto por `display: none;`
@@ -958,6 +1000,7 @@ function openUserMenu(event) {
         history.pushState(null, "", "#user-menu");
     }
 }
+
 
 
 
@@ -1134,7 +1177,7 @@ function applyLanguage(language) {
     // 🔹 Guardamos la selección del usuario
     localStorage.setItem("language", language);
 
-    // 🔹 Actualizamos todos los elementos traducibles
+    // 🔹 Actualizamos todos los elementos con "data-translate"
     document.querySelectorAll("[data-translate]").forEach(element => {
         const key = element.getAttribute("data-translate");
 
@@ -1143,10 +1186,18 @@ function applyLanguage(language) {
         }
     });
 
-    // 🔹 Asegurar que el botón de login muestra el idioma correcto
-    const loginText = document.getElementById("loginText");
-    if (loginText && translations[language]["login"]) {
-        loginText.textContent = translations[language]["login"];
+    // 🔹 Actualizar los elementos con "data-text" en los submenús dinámicos
+    document.querySelectorAll("[data-text]").forEach(element => {
+        const key = element.getAttribute("data-text");
+        if (translations[language] && translations[language][key]) {
+            element.textContent = translations[language][key];
+        }
+    });
+
+    // 🔹 Actualizar el texto del loginBox sin eliminar eventos
+    const loginBox = document.getElementById("loginBox");
+    if (loginBox) {
+        loginBox.innerHTML = isLoggedIn ? translations[language]["welcome-player"] : translations[language]["login"];
     }
 
     // 🔹 Si el menú de usuario está abierto, actualizarlo sin cerrarlo
@@ -1155,8 +1206,26 @@ function applyLanguage(language) {
         showMenu("userMenu"); 
     }
 
+    // 🔹 **Actualizar solo los textos del Play Menu sin tocar su estructura**
+    const playMenu = document.getElementById("playMenu");
+    if (playMenu) {
+        playMenu.querySelectorAll(".play-option").forEach(option => {
+            const mode = option.dataset.mode; // 📌 Obtener el modo (ej: "solo-ai", "local", etc.)
+            if (translations[language][mode]) {
+                option.textContent = translations[language][mode]; // ✅ Aplicar traducción sin afectar eventos
+            }
+        });
+
+        // 🔹 Si el menú está visible, reajustamos su posición
+        if (playMenu.classList.contains("visible")) {
+            positionPlayMenu();
+        }
+    }
+
     console.log("✅ Idioma aplicado correctamente.");
 }
+
+
 
 
 
@@ -1208,6 +1277,16 @@ const translations = {
         "sign-up-button": "Registrarse",
         "reset-password": "Restablecer tu contraseña",
         "send-reset": "Enviar enlace de restablecimiento",
+        "edit-profile": "Editar perfil",
+        "edit-username": "Editar nombre de usuario",
+        "edit-email": "Editar correo electrónico",
+        "edit-password": "Editar contraseña",
+        "toggle-2fa": "Activar 2FA",
+        "solo-ai": "Solo contra IA",
+        "local": "Uno contra Uno Local",
+        "online": "Uno contra Uno Online",
+        "create-tournament": "Crear Torneo",
+        "join-tournament": "Unirse a Torneo",
         "back": "← Volver"
     },
     fr: {
@@ -1231,6 +1310,16 @@ const translations = {
         "sign-up-button": "S'inscrire",
         "reset-password": "Réinitialiser votre mot de passe",
         "send-reset": "Envoyer le lien de réinitialisation",
+        "edit-profile": "Modifier le profil",
+        "edit-username": "Modifier le nom d'utilisateur",
+        "edit-email": "Modifier l'email",
+        "edit-password": "Modifier le mot de passe",
+        "toggle-2fa": "Activer 2FA",
+        "solo-ai": "Solo contre IA",
+        "local": "Un contre Un Local",
+        "online": "Un contre Un en Ligne",
+        "create-tournament": "Créer un Tournoi",
+        "join-tournament": "Rejoindre un Tournoi",
         "back": "← Retour"
     }
 };
