@@ -490,41 +490,29 @@ function showMenu(menu) {
     loginOptions.innerHTML = menuContent;
 
     // Agregar eventos de clic a las opciones después de actualizar el menú
+    // Añadimos el modal para nohacer una ventana emergente.
     setTimeout(() => {
         loginOptions.querySelectorAll(".login-option, .back-option").forEach(option => {
             option.addEventListener("click", function (event) {
                 event.stopPropagation();
-    
+
                 if (option.classList.contains("intra-login")) {
                     loginWithIntra();
                     return;
                 }
-    
+
                 if (option.dataset.menu === "logout") {
                     console.log("⚠️ Clic en Log out detectado. Ejecutando logoutUser()...");
                     logoutUser();
                     return;
                 }
-    
-                // 📝 🔄 Manejamos directamente las opciones de edición sin cambiar de menú
-                if (option.dataset.menu === "edit-username") {
-                    let newUsername = prompt("Enter new username:");
-                    if (newUsername) console.log(`📝 Username changed to: ${newUsername}`);
+
+                // Abrir modal en lugar de popus
+                if (["edit-username", "edit-password", "edit-email"].includes(option.dataset.menu)) {
+                    openEditModal(option.dataset.menu);
                     return;
                 }
-    
-                if (option.dataset.menu === "edit-password") {
-                    let newPassword = prompt("Enter new password:");
-                    if (newPassword) console.log("🔑 Password updated successfully.");
-                    return;
-                }
-    
-                if (option.dataset.menu === "edit-email") {
-                    let newEmail = prompt("Enter new email:");
-                    if (newEmail) console.log(`📧 Email updated to: ${newEmail}`);
-                    return;
-                }
-    
+
                 if (option.id === "toggle-2fa") {
                     let is2FAEnabled = confirm("Do you want to enable Two-Factor Authentication?");
                     if (is2FAEnabled) {
@@ -536,14 +524,75 @@ function showMenu(menu) {
                     }
                     return;
                 }
-    
+
                 // Si no es ninguna de estas acciones, cambiar de menú normalmente
                 showMenu(option.dataset.menu);
             });
         });
     }, 100);
+
     
 }
+
+// EL puto modal
+function openEditModal(type) {
+    let modalTitle = document.getElementById("editModalLabel");
+    let modalInput = document.getElementById("editModalInput");
+    let saveButton = document.getElementById("saveEdit");
+
+    // **Asegurar que el modal y los elementos existen**
+    if (!modalTitle || !modalInput || !saveButton) {
+        console.error("❌ No se encontraron los elementos del modal.");
+        return;
+    }
+
+    // **Resetear input antes de cambiar tipo**
+    modalInput.value = "";
+    modalInput.type = "text"; // Resetear a texto por defecto
+
+    if (type === "edit-username") {
+        modalTitle.textContent = "Editar Nombre de Usuario";
+        modalInput.placeholder = "Nuevo nombre de usuario";
+    } else if (type === "edit-password") {
+        modalTitle.textContent = "Cambiar Contraseña";
+        modalInput.placeholder = "Nueva contraseña";
+        modalInput.type = "password";
+    } else if (type === "edit-email") {
+        modalTitle.textContent = "Cambiar Email";
+        modalInput.placeholder = "Nuevo email";
+        modalInput.type = "email";
+    }
+
+    // **Abrir el modal correctamente con Bootstrap**
+    let modal = new bootstrap.Modal(document.getElementById("editModal"));
+    modal.show();
+
+    // **Reemplazar botón para evitar múltiples eventos**
+    let newSaveButton = saveButton.cloneNode(true);
+    saveButton.replaceWith(newSaveButton);
+    saveButton = newSaveButton; // Reasignamos el botón
+
+    // **Asignar nuevo evento al botón de guardar**
+    saveButton.onclick = function () {
+        let newValue = modalInput.value.trim();
+        if (!newValue) {
+            alert("El campo no puede estar vacío.");
+            return;
+        }
+
+        if (type === "edit-username") {
+            console.log(`Nombre de usuario cambiado a: ${newValue}`);
+        } else if (type === "edit-password") {
+            console.log("Contraseña actualizada correctamente.");
+        } else if (type === "edit-email") {
+            console.log(`Email cambiado a: ${newValue}`);
+        }
+
+        // **Cerrar modal después de guardar**
+        modal.hide();
+    };
+}
+
 
 
 
@@ -806,9 +855,9 @@ function resetPassword() {
 function activateMenus() {
     console.log("🟢 Activando menús...");
 
-    isLoggedIn = true; // ✅ Marcamos al usuario como logeado
+    isLoggedIn = true; // ✅ Usuario logeado
 
-    // 🔹 Habilitar todas las opciones de menú que estaban inactivas
+    // 🔹 Habilitar todas las opciones del menú
     document.querySelectorAll(".option-box").forEach(option => {
         if (!option.classList.contains("no-border")) {
             option.classList.remove("inactive");
@@ -817,38 +866,44 @@ function activateMenus() {
         }
     });
 
-    // 🔹 Reemplazar el loginBox por "Welcome, Player"
+    // 🔹 Cambiar solo el texto del botón en vez de reemplazarlo
     const loginBox = document.getElementById("loginBox");
-    loginBox.innerHTML = `<div id="userWelcome" class="menu-option">Welcome, <strong>Player</strong></div>`;
+    loginBox.innerHTML = "Welcome, <strong>Player</strong>";
 
-    const userWelcome = document.getElementById("userWelcome");
-
-    // 🔹 Evento para iluminar al hacer clic en Welcome Player
-    userWelcome.addEventListener("click", function(event) {
-        event.stopPropagation(); // 🛑 Evita que el clic cierre inmediatamente la caja
-        console.log("🟢 Clic en Welcome Player. Alternando iluminación...");
-
-        // 🔥 Asegurar que la clase active se añade correctamente a loginBox
-        loginBox.classList.add("active"); 
-
-        // 🔹 Resaltar el botón y abrir menú de usuario
-        updateActiveButton(userWelcome);
-        openUserMenu();
-    });
-
-    // 🔹 Evento para apagar la iluminación si se hace clic fuera
-    document.addEventListener("click", function(event) {
-        if (!loginBox.contains(event.target)) {
-            console.log("🔴 Clic fuera de Welcome Player. Apagando iluminación...");
-            loginBox.classList.remove("active");
-        }
-    });
+    // 🔹 Asegurar que el evento de clic sigue funcionando
+    loginBox.removeEventListener("click", openUserMenu);
+    loginBox.addEventListener("click", openUserMenu);
 
     // 🔹 Actualizar la UI
     history.replaceState(null, "", "#loged");
     updateView("loged");
 }
 
+
+
+
+
+// 🔹 Función para manejar el clic en "Welcome, Player"
+function handleUserWelcomeClick(event) {
+    event.stopPropagation(); // 🛑 Evita que el clic cierre inmediatamente la caja
+    console.log("🟢 Clic en Welcome Player. Alternando iluminación...");
+
+    const loginBox = document.getElementById("loginBox");
+    loginBox.classList.add("active"); // 🔥 Iluminar botón
+
+    updateActiveButton(event.currentTarget); // 🔹 Resaltar botón
+    openUserMenu(); // 🔹 Abrir menú de usuario
+}
+
+// 🔹 Función para manejar el cierre del menú cuando se hace clic fuera
+function handleCloseUserMenu(event) {
+    const loginBox = document.getElementById("loginBox");
+
+    if (!loginBox.contains(event.target)) {
+        console.log("🔴 Clic fuera de Welcome Player. Apagando iluminación...");
+        loginBox.classList.remove("active");
+    }
+}
 
 
 
@@ -874,33 +929,36 @@ function activateMenus() {
 
 
 //  Nueva función para mostrar el menú del usuario cuando estamos logeados.
-function openUserMenu() {
-    console.log("🟢 Intentando abrir menú de usuario...");
+// Función para manejar el menú del usuario al hacer clic en "Welcome, Player"
+function openUserMenu(event) {
+    event.stopPropagation(); // 🛑 Evita que el clic cierre el menú inmediatamente
+    console.log("🟢 Se ha hecho clic en Welcome Player. Abriendo User Menu...");
 
-    let loginOptions = document.getElementById("loginOptions");
-    let playMenu = document.getElementById("playMenu"); // 🔹 Referencia al menú de Play
-
-    // 🔴 Si Play Menu está abierto, cerrarlo primero
-    if (playMenu && playMenu.classList.contains("visible")) {
-        console.log("🔴 Play Menu está abierto, cerrándolo antes de abrir User Menu...");
-        playMenu.classList.remove("visible");
+    if (!isLoggedIn) {
+        console.warn("⚠️ Usuario no logeado. Mostrando menú de login.");
+        showMenu("main");
+        return;
     }
 
-    // 🔹 Si el usuario está logeado, abrir menú de usuario
-    if (isLoggedIn) {
-        console.log("✅ Usuario logeado, mostrando User Menu...");
-        showMenu("userMenu");
-        loginOptions.classList.add("visible");
-        loginOptions.style.display = "block";
+    // 🔹 Referencia al contenedor del menú de login (donde se muestra userMenu)
+    let loginOptions = document.getElementById("loginOptions");
 
-        if (location.hash !== "#user-menu") {
-            history.pushState(null, "", "#user-menu");
-        }
-    } else {
-        console.warn("⚠️ Intento de abrir User Menu sin estar logeado. Abriendo Login.");
-        showMenu("main");
+    if (!loginOptions) {
+        console.error("❌ No se encontró #loginOptions en el DOM.");
+        return;
+    }
+
+    // 🔹 Mostrar el menú de usuario asegurando que sea visible
+    showMenu("userMenu");
+    loginOptions.classList.add("visible");
+    loginOptions.style.display = "block"; // Asegurar que no está oculto por `display: none;`
+
+    // 🔹 Actualizar la URL si es necesario
+    if (location.hash !== "#user-menu") {
+        history.pushState(null, "", "#user-menu");
     }
 }
+
 
 
 
