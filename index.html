@@ -26,48 +26,81 @@
                 <div class="mt-4">
                     <div class="row mb-2">
                         <div class="col-2 position-relative">
-                            <div id="loginBox" class="rounded-box option-box menu-option p-3" data-menu="login" data-translate="login">&nbsp;</div>
-                            <div id="loginOptions" class="login-options"></div>
+                            <div id="loginBox" class="rounded-box option-box menu-option p-3" data-menu="login" data-translate="login" tabindex="0" role="button" aria-label="Log in / Sign up">
+                                Log in / Sign up
+                            </div>                            
+                            <div id="loginOptions" class="login-options">
+                                <p class="login-option intra-login" onclick="loginWithIntra()" tabindex="0" role="button" aria-label="Log in with intra">
+                                    Already a 42 member? Log in with intra
+                                </p>
+                                <div class="separator"></div>
+                                <p class="login-option" data-menu="sign-in" data-text="Sign in with email" tabindex="0" role="button" aria-label="Sign in with email">
+                                    Sign in with email
+                                </p>
+                                <div class="separator"></div>
+                                <p class="login-option" data-menu="sign-up" data-text="Sign up with email" tabindex="0" role="button" aria-label="Sign up with email">
+                                    Sign up with email
+                                </p>
+                                <div class="separator"></div>
+                                <p class="login-option" data-menu="forgot" data-text="Forgot your password?" tabindex="0" role="button" aria-label="Forgot your password">
+                                    Forgot your password?
+                                </p>
+                            </div>
+                                                       
                         </div>
                     </div>
-
                     <div class="row mb-2">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="play" data-translate="play">&nbsp;</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="play" data-translate="play"
+                                 tabindex="0" role="button" aria-label="Play">
+                                Play
+                            </div>
                         </div>
                     </div>
-
+                    
                     <div class="row mb-2">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="settings" data-translate="settings">&nbsp;</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="settings" data-translate="settings"
+                                 tabindex="0" role="button" aria-label="Settings">
+                                Settings
+                            </div>
                         </div>
                     </div>
+                    
                     <div class="row">
                         <div class="col-2">
-                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="credits" data-translate="credits">&nbsp;</div>
+                            <div class="rounded-box option-box p-3 inactive menu-option" data-menu="credits" data-translate="credits"
+                                 tabindex="0" role="button" aria-label="Credits">
+                                Credits
+                            </div>
                         </div>
                     </div>
-
+                    
                     <!-- Selector de idioma debajo de Credits -->
                     <div class="row mt-2">
                         <div class="col-2">
-                            <div id="languageBox" class="rounded-box option-box menu-option p-3 no-border" data-translate="language">&nbsp;</div>
-                            <select id="languageSelector" class="language-dropdown">
+                            <div id="languageBox" class="rounded-box option-box menu-option p-3 no-border" data-translate="language"
+                                 tabindex="0" role="button" aria-label="Change language">
+                                Language
+                            </div>
+                            <label for="languageSelector" class="visually-hidden">Select your language</label>
+                            <select id="languageSelector" class="language-dropdown" aria-label="Language selector">
                                 <option value="en">English</option>
                                 <option value="es">Español</option>
                                 <option value="fr">Français</option>
                             </select>
+
                         </div>
                     </div>
-
+                    
                     <div id="settings" class="view-section" style="display: none;">
-                        <h2 data-translate="settings-title">Settings</h2>
-                        <p data-translate="settings-desc">Adjust your preferences here.</p>
+                        <h2>Settings</h2>
+                        <p>Adjust your preferences here.</p>
                     </div>
 
                     <div id="credits" class="view-section" style="display: none;">
-                        <h2 data-translate="credits-title">Credits</h2>
-                        <p data-translate="credits-desc">Meet the team behind the project.</p>
+                        <h2>Credits</h2>
+                        <p>Meet the team behind the project.</p>
                     </div>
                 </div>
             </div>
@@ -83,23 +116,24 @@
         <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-            <h5 class="modal-title" id="editModalLabel" data-translate="edit-profile">Editar</h5>
+            <h5 class="modal-title" id="editModalLabel">Editar</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-            <label id="editModalLabelInput" for="editModalInput" data-translate="edit-label"></label>
+            <label id="editModalLabelInput" for="editModalInput"></label>
             <input type="text" id="editModalInput" class="form-control">
             </div>
             <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="saveEdit" data-translate="save">Guardar</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="saveEdit">Guardar</button>
             </div>
         </div>
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS + Popper.js -->
+    <!-- Bootstrap 5 JS + Popper.js (antes de </body>) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script src="script.js"></script>
 </body>
 </html>
