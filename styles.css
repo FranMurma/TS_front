@@ -53,7 +53,7 @@ body {
     color: rgba(0, 255, 0, 0.8); /* El texto se pone un poco más brillante al hacer hover */
 }
 
-/* 🔹 Botones inactivos: Apagados y sin hover */
+/*  Botones inactivos: Apagados y sin hover */
 .option-box.inactive {
     opacity: 0.5;  /* Hace que se vean más apagados */
     pointer-events: none; /* No permite clics */
@@ -88,7 +88,7 @@ body {
 
 
 
-/* 🔹 Al hacer clic, solo se resalta el texto sin modificar el borde ni el fondo */
+/*  Al hacer clic, solo se resalta el texto sin modificar el borde ni el fondo */
 .option-box:active, #loginBox:active, #userWelcome:active, 
 .menu-option:active, [data-menu='play']:active {
     transform: scale(1.1);
@@ -102,14 +102,14 @@ body {
 
 
 
-/* 🔹 Caja Expandida */
-/* 🔹 Ajuste para que el login se expanda lateralmente como el Play */
-/* 🔹 Asegurar que el menú no se meta detrás ni adelante */
+/*  Caja Expandida */
+/*  Ajuste para que el login se expanda lateralmente como el Play */
+/*  Asegurar que el menú no se meta detrás ni adelante */
 .login-options {
     position: absolute;
     top: 0;
-    left: 100%; /* 🔹 Por defecto, al lado derecho */
-    margin-left: 10px; /* 🔹 Margen para evitar que se pegue al botón */
+    left: 100%; /*  Por defecto, al lado derecho */
+    margin-left: 10px; /*  Margen para evitar que se pegue al botón */
     width: 280px;
     background-color: rgba(39, 33, 35, 0.9);
     border-right: 3px solid var(--green-bright);
@@ -125,7 +125,7 @@ body {
     z-index: 10;
 }
 
-/* 🔹 Cuando el menú está visible */
+/*  Cuando el menú está visible */
 .login-options.visible {
     opacity: 1;
     visibility: visible;
@@ -139,7 +139,7 @@ body {
     transform: scaleY(0);
 }
 
-/* 🔹 Estilo de opciones */
+/*  Estilo de opciones */
 .login-option {
     padding: 10px;
     text-align: left;
@@ -168,7 +168,7 @@ body {
 
 
 
-/* 🔹 EFECTO MATRIX */
+/*  EFECTO MATRIX */
 .matrix-effect {
     position: relative;
     background-color: var(--dark-gray);
@@ -233,7 +233,7 @@ canvas {
     right: calc(7.5% - 0.5px);
 }
 
-/* 🔹 Aseguramos que el canvas del juego ocupe bien el espacio */
+/*  Aseguramos que el canvas del juego ocupe bien el espacio */
 #juego {
     width: 100%;
     height: 100%;
@@ -245,7 +245,7 @@ canvas {
 }
 
 
-/* 🔹 Menú desplegable de Play (misma estructura que login-options) */
+/*  Menú desplegable de Play (misma estructura que login-options) */
 #playMenu {
     position: absolute;
     top: 0;
@@ -258,14 +258,14 @@ canvas {
     border-radius: 0 5mm 5mm 5mm;
     padding: 15px;
     box-shadow: 5px 0px 10px rgba(0, 255, 0, 0.3);
-    opacity: 0;  /* 🔹 Inicialmente oculto */
-    visibility: hidden; /* 🔹 Evita que bloquee eventos */
+    opacity: 0;  /*  Inicialmente oculto */
+    visibility: hidden; /*  Evita que bloquee eventos */
     transform: scaleY(0);
     transform-origin: top;
     transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, transform 0.3s ease-in-out;
 }
 
-/* 🔹 Mostrarlo cuando sea visible */
+/*  Mostrarlo cuando sea visible */
 #playMenu.visible {
     opacity: 1;
     visibility: visible;
@@ -273,7 +273,7 @@ canvas {
 }
 
 
-/* 🔹 Opciones dentro del menú de Play */
+/*  Opciones dentro del menú de Play */
 .play-option {
     padding: 10px;
     text-align: left;
@@ -311,7 +311,7 @@ hr {
 }
 
 
-/* 🔹 Efecto de resplandor solo en el texto cuando el botón está activo */
+/*  Efecto de resplandor solo en el texto cuando el botón está activo */
 .menu-option.active,
 [data-menu='play'].active,
 [data-menu='settings'].active,
@@ -337,7 +337,7 @@ hr {
 
 
 /* Efecto de resplandor pulsante */
-/* 🔹 Animación de iluminación para el texto */
+/*  Animación de iluminación para el texto */
 @keyframes subtleGlow {
     0% { text-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
     50% { text-shadow: 0px 0px 12px rgba(0, 255, 0, 0.6); }
@@ -350,14 +350,14 @@ hr {
 
 
 
-/* 🔹 Evitar efectos duplicados en el texto */
+/*  Evitar efectos duplicados en el texto */
 #userWelcome strong {
     font-weight: bold;
     text-shadow: none;
     background: transparent;
 }
 
-/* 🔹 Animación de iluminación */
+/*  Animación de iluminación */
 @keyframes subtleGlow {
     0% { box-shadow: 0px 0px 6px rgba(0, 255, 0, 0.5); }
     50% { box-shadow: 0px 0px 12px rgba(0, 255, 0, 0.6); }
@@ -371,7 +371,7 @@ hr {
 
 
 
-/* 🔹 En tablets (menos de 1024px), eliminamos UNA columna Matrix */
+/*  En tablets (menos de 1024px), eliminamos UNA columna Matrix */
 @media (max-width: 1024px) {
     .matrix-effect,
     .vertical-divider { 
@@ -390,7 +390,7 @@ hr {
     }
 }
 
-/* 🔹 En móviles (menos de 768px), ocultamos ambas columnas Matrix */
+/*  En móviles (menos de 768px), ocultamos ambas columnas Matrix */
 @media (max-width: 768px) {
     .matrix-effect,
     .vertical-divider {
@@ -418,7 +418,7 @@ hr {
     }
 }
 
-/* 🔹 En móviles aún más pequeños (menos de 480px) */
+/*  En móviles aún más pequeños (menos de 480px) */
 @media (max-width: 480px) {
     .option-box {
         font-size: 4vw;
@@ -427,10 +427,12 @@ hr {
 }
 
 
-/*** Lenguajes ***/
+/*** Idiomas ***/
 .language-dropdown {
-    display: none; /* Oculto por defecto */
     position: absolute;
+    visibility: hidden; /* Oculto visualmente, pero presente en el DOM */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
     background-color: black; 
     color: rgba(0, 255, 0, 0.7);
     border: none !important;
@@ -440,11 +442,13 @@ hr {
     outline: none;
 }
 
+/* Mostrar el selector cuando esté activo */
 .language-dropdown.visible {
-    display: block; /* Cuando está visible, mostrar */
+    visibility: visible;
+    opacity: 1;
 }
 
-/* 🔹 Si se hace clic, que NO tenga borde ni cambie de fondo */
+/*  Si se hace clic, que NO tenga borde ni cambie de fondo */
 #languageBox:active, #languageBox.active {
     border: none !important;
     background: transparent !important;
@@ -456,4 +460,44 @@ hr {
     color: rgba(0, 255, 0, 0.8); /* ✅ Se pone un poco más brillante */
     box-shadow: none !important;
 
+}
+
+/* Estilos para los modales */
+.modal-content {
+    background-color: var(--dark-gray); /* Fondo oscuro */
+    color: var(--green-bright); /* Texto verde brillante */
+    border: 1px solid var(--green-bright); /* Borde verde brillante */
+}
+
+/* Estilos del título del modal */
+.modal-header {
+    background-color: var(--dark-gray);
+    color: var(--green-bright);
+}
+
+/* Estilos para los botones del modal */
+.modal-footer .btn {
+    background-color: var(--green-bright);
+    color: var(--dark-gray);
+    border: none;
+}
+
+.modal-footer .btn:hover {
+    background-color: #00cc00; /* Un verde un poco más oscuro al pasar el ratón */
+}
+
+/* Estilo para el modal cuando está visible */
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro transparente */
+}
+
+/* Ajustes para el cierre del modal */
+.modal-header .btn-close {
+    background-color: var(--dark-gray);
+    color: var(--green-bright);
+}
+
+.modal-header .btn-close:hover {
+    background-color: #00cc00;
+    color: var(--dark-gray);
 }

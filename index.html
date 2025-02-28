@@ -6,6 +6,7 @@
     <title>Transcendence Pong</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:,">
 </head>
 <body>
     <div class="container-fluid">
@@ -30,23 +31,14 @@
                                 Log in / Sign up
                             </div>                            
                             <div id="loginOptions" class="login-options">
-                                <p class="login-option intra-login" onclick="loginWithIntra()" tabindex="0" role="button" aria-label="Log in with intra">
-                                    Already a 42 member? Log in with intra
-                                </p>
+                                <p class="login-option intra-login" onclick="loginWithIntra()">Already a 42 member? Log in with intra</p>
                                 <div class="separator"></div>
-                                <p class="login-option" data-menu="sign-in" data-text="Sign in with email" tabindex="0" role="button" aria-label="Sign in with email">
-                                    Sign in with email
-                                </p>
+                                <p class="login-option" data-menu="sign-in" data-text="Sign in with email">&nbsp;</p>
                                 <div class="separator"></div>
-                                <p class="login-option" data-menu="sign-up" data-text="Sign up with email" tabindex="0" role="button" aria-label="Sign up with email">
-                                    Sign up with email
-                                </p>
+                                <p class="login-option" data-menu="sign-up" data-text="Sign up with email">&nbsp;</p>
                                 <div class="separator"></div>
-                                <p class="login-option" data-menu="forgot" data-text="Forgot your password?" tabindex="0" role="button" aria-label="Forgot your password">
-                                    Forgot your password?
-                                </p>
-                            </div>
-                                                       
+                                <p class="login-option" data-menu="forgot" data-text="Forgot your password?">&nbsp;</p>
+                            </div>                            
                         </div>
                     </div>
                     <div class="row mb-2">
@@ -84,12 +76,12 @@
                                 Language
                             </div>
                             <label for="languageSelector" class="visually-hidden">Select your language</label>
-                            <select id="languageSelector" class="language-dropdown" aria-label="Language selector">
+                            <select id="languageSelector" class="language-dropdown" aria-label="Language selector" tabindex="0">
                                 <option value="en">English</option>
                                 <option value="es">Español</option>
                                 <option value="fr">Français</option>
                             </select>
-
+                            
                         </div>
                     </div>
                     
@@ -131,9 +123,8 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS + Popper.js (antes de </body>) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <!-- Bootstrap 5 JS + Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

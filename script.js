@@ -37,7 +37,7 @@ createMatrixEffect('matrixCanvasRight');
 
 
 // Efecto solo para que aparezca en plan consola escribiendo poco a poco
-// Efecto máquina de escribir
+//  Efecto máquina de escribir
 function typeWriterEffect(element, text, speed, callback) {
     let index = 0;
 
@@ -84,40 +84,60 @@ function navigateTo(section) {
 
 
 function updateView(section) {
-    console.log(` updateView() llamado con sección: ${section}`);
+    console.log(`updateView() llamado con sección: ${section}`);
 
-    // Si la sección no existe en el DOM, crearla dinámicamente
+    // Si la sección no existe en el DOM, la creamos dinámicamente
     if (!document.getElementById(section)) {
         console.warn(`⚠️ Se esperaba la sección #${section} pero no existe. Creándola...`);
-        
+
         let newSection = document.createElement("div");
         newSection.id = section;
         newSection.classList.add("view-section");
         newSection.style.display = "none";
-        
-        // Contenido genérico si no hay una estructura específica
+
         newSection.innerHTML = `<h2>${section.toUpperCase()}</h2>`;
-        
+
         document.body.appendChild(newSection);
         console.log(`✅ Se ha creado dinámicamente la sección #${section}`);
     }
 
-    // Si el usuario está logeado, evitar que vaya a login
-    if (isLoggedIn && section === "login") {
-        console.warn("⚠️ Intento de cambiar a login mientras está logeado. Corrigiendo a loged.");
+    // Redirigir entre login y loged según el estado del usuario
+    if (section === "loged" && !isLoggedIn) {
+        console.warn("⚠️ Usuario no logeado intentó acceder a loged. Redirigiendo a login.");
+        section = "login";
+    } else if (section === "login" && isLoggedIn) {
+        console.warn("⚠️ Usuario ya logeado intentó acceder a login. Redirigiendo a loged.");
         section = "loged";
     }
 
-    //  Si el usuario NO está logeado, evitar que vaya a "loged"
-    if (!isLoggedIn && section === "loged") {
-        console.warn("⚠️ Intento de cambiar a loged sin estar logeado. Redirigiendo a login.");
-        section = "login";
-    }
-
-    //  Ocultar todas las secciones antes de mostrar la nueva
+    // Ocultar todas las secciones antes de mostrar la nueva
     document.querySelectorAll(".view-section").forEach(el => el.style.display = "none");
 
-    //  Mostrar la nueva sección
+    // Asegurar que loged tiene la estructura correcta
+    if (section === "loged") {
+        let logedSection = document.getElementById("loged");
+        if (!logedSection) {
+            logedSection = document.createElement("div");
+            logedSection.id = "loged";
+            logedSection.classList.add("view-section");
+            logedSection.innerHTML = `<h2 data-translate="welcome-player"><strong>${translations[localStorage.getItem("language") || "en"]["welcome-player"]}</strong></h2>`;
+            document.body.appendChild(logedSection);
+            console.log("✅ Se ha creado dinámicamente la sección #loged");
+        } 
+
+        //  Actualizar el texto de #userWelcome sin sobrescribirlo
+        const userWelcome = document.getElementById("userWelcome");
+        if (userWelcome) {
+            const usernameText = userWelcome.querySelector("strong");
+            if (usernameText) {
+                usernameText.textContent = translations[localStorage.getItem("language") || "en"]["welcome-player"];
+            }
+        }
+
+        logedSection.style.display = "block";
+    }
+
+    // Mostrar la nueva sección
     let activeSection = document.getElementById(section);
     if (activeSection) {
         activeSection.style.display = "block";
@@ -125,28 +145,9 @@ function updateView(section) {
     } else {
         console.error(`❌ ERROR: La sección #${section} no existe. Redirigiendo a login.`);
         updateView("login");
-        return;
-    }
-
-    //  Identificar qué opción del menú debe activarse
-    let activeMenu = document.querySelector(`[data-menu="${section}"]`);
-    if (!activeMenu && (section === "loged" || section === "user-menu")) {
-        activeMenu = document.getElementById("userWelcome");
-    }
-    if (!activeMenu && (section === "play-menu" || section === "juego")) {
-        activeMenu = document.querySelector("[data-menu='play']");
-    }
-
-    //  Remover "active" de todos los botones y aplicarla solo al correcto
-    document.querySelectorAll(".menu-option").forEach(option => option.classList.remove("active"));
-    
-    if (activeMenu) {
-        activeMenu.classList.add("active");
-        console.log(`✅ Resaltando: ${activeMenu.textContent.trim()}`);
-    } else {
-        console.warn(`⚠️ No se encontró un botón del menú para la sección: ${section}`);
     }
 }
+
 
 
 
@@ -167,62 +168,76 @@ function updateView(section) {
 document.addEventListener("DOMContentLoaded", function () {
     console.log("🔄 Página cargada. Inicializando configuración...");
 
-    enableKeyboardNavigation(); 
-    document.addEventListener("keydown", trapTabKey); // Limita el tab solo a elementos habilitados
+    const playButton = document.querySelector("[data-menu='play']");
 
-    const languageBox = document.getElementById("languageBox");
+
+
+    // 1. Inicialización del idioma
+    const currentLanguage = localStorage.getItem("language") || "en";
     const languageSelector = document.getElementById("languageSelector");
+    const languageBox = document.getElementById("languageBox");
 
-
-    // 🟢 1. Inicialización del idioma
     if (languageBox && languageSelector) {
-        languageBox.addEventListener("click", function (event) {
-            event.stopPropagation();
-            languageSelector.classList.toggle("visible");
-            languageSelector.focus(); //  Forzar foco en el selector de idioma
-        });
-
+        // Evento para abrir el selector con Enter o Espacio
         languageBox.addEventListener("keydown", function (event) {
             if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                languageSelector.classList.toggle("visible");
-                languageSelector.focus(); //  Forzar foco en el selector de idioma
+                console.log("Enter/Espacio detectado en LanguageBox");
+
+                // Mostrar el selector y enfocar
+                languageSelector.classList.add("visible");
+                languageSelector.focus();
             }
         });
 
-        // Permitir cambiar el idioma con el teclado
+        // Evento para capturar Enter en el selector y cambiar el idioma
         languageSelector.addEventListener("keydown", function (event) {
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                event.preventDefault();
-                const options = Array.from(languageSelector.options);
-                let selectedIndex = languageSelector.selectedIndex;
-
-                if (event.key === "ArrowDown" && selectedIndex < options.length - 1) {
-                    selectedIndex++;
-                } else if (event.key === "ArrowUp" && selectedIndex > 0) {
-                    selectedIndex--;
-                }
-
-                languageSelector.selectedIndex = selectedIndex;
-            } else if (event.key === "Enter") {
+            if (event.key === "Enter") {
                 event.preventDefault();
                 const selectedLanguage = languageSelector.value;
+                console.log(`🌍 Confirmando idioma: ${selectedLanguage}`);
+
                 localStorage.setItem("language", selectedLanguage);
                 applyLanguage(selectedLanguage);
-                languageSelector.classList.remove("visible"); //  Cerrar el selector tras elegir
-                languageBox.focus(); //  Devolver el foco a la caja
+
+                // Ocultar el selector y devolver foco a languageBox
+                languageSelector.classList.remove("visible");
+                languageBox.focus();
+            } else if (event.key === "Escape") {
+                event.preventDefault();
+                console.log("❌ Cancelando cambio de idioma.");
+                languageSelector.classList.remove("visible");
+                languageBox.focus();
             }
         });
+
+        // Evento de clic para abrir/cerrar el selector
+        languageBox.addEventListener("click", (event) => {
+            event.stopPropagation();
+            languageSelector.classList.toggle("visible");
+            languageSelector.focus();
+        });
+
+        // Cerrar selector si se hace clic fuera
+        document.addEventListener("click", (event) => {
+            if (!languageBox.contains(event.target) && !languageSelector.contains(event.target)) {
+                languageSelector.classList.remove("visible");
+            }
+        });
+
+        // Asegurar que el idioma seleccionado persiste
+        languageSelector.value = currentLanguage;
+        applyLanguage(currentLanguage);
     }
+    
 
-
-    // 🟢 2. Manejo de la navegación en la carga de la página
-    if (!location.hash || (location.hash === "#loged" && !isLoggedIn)) {
-        console.warn("⚠️ Corrigiendo hash inválido. Redirigiendo a login.");
+    // 2. Manejo de la navegación en la carga de la página
+    if (!isLoggedIn && location.hash !== "#login") {
+        console.warn("⚠️ Usuario no autenticado. Redirigiendo a login.");
         history.replaceState(null, "", "#login");
     }
-
-    // 🟢 3. Manejo del selector de idioma
+    
+    // 3. Manejo del selector de idioma
     if (languageBox && languageSelector) {
         languageBox.addEventListener("click", (event) => {
             event.stopPropagation();
@@ -236,30 +251,54 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // 🟢 4. Manejo del menú de login
+    // 4. Manejo del menú de login y eventos de accesibilidad
     const loginBox = document.getElementById("loginBox");
-    const loginOptions = document.getElementById("loginOptions");
 
-    if (loginBox && loginOptions) {
-        loginBox.addEventListener("click", function (event) {
-            event.stopPropagation();
-    
-            if (isLoggedIn) {
-                console.log("🟢 Usuario logeado, abriendo menú de usuario...");
-                openUserMenu(); // Mostrar menú de usuario en vez del de login
-            } else {
-                console.log("🔴 Usuario no logeado, mostrando opciones de login...");
-                
-                //  Asegurar que las opciones de login se regeneran
-                showMenu("main"); 
-                
-                if (!loginOptions.classList.contains("visible")) {
-                    loginOptions.classList.add("visible");
-                    loginOptions.style.display = "block"; //  Asegurar que es visible
-                }
-            }
-        });
+    if (!loginBox) {
+        console.error("❌ ERROR: loginBox no encontrado.");
+        return;
     }
+
+    console.log("✅ loginBox encontrado. Asignando eventos...");
+
+    loginBox.setAttribute("tabindex", "0"); //  Permitir navegación con Tab
+
+    //  Evento de clic normal
+    loginBox.addEventListener("click", function (event) {
+        event.stopPropagation();
+        if (isLoggedIn) {
+            console.log("🟢 Usuario logeado, abriendo menú de usuario...");
+            openUserMenu(event);
+        } else {
+            console.log("🔴 Usuario no logeado, mostrando opciones de login...");
+            showMenu("main");
+        }
+    });
+
+    //  Evento de teclado (Enter o Espacio simulan clic)
+    loginBox.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            console.log("Enter o Espacio presionado en Log in / Sign up");
+            loginBox.click(); // Simula un clic normal
+        }
+    });
+
+    //  Permitir que TODOS los botones de menú dinámicos se comporten igual
+    document.querySelectorAll(".menu-option").forEach(menuOption => {
+        if (menuOption.id !== "languageBox") { // Excluir el LanguageBox
+            menuOption.setAttribute("tabindex", "0"); // Asegurar que sean navegables
+            menuOption.addEventListener("keydown", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    console.log(`Enter/Espacio detectado en: ${menuOption.dataset.menu || "sin data-menu"}`);
+                    menuOption.click(); // Simula un clic
+                }
+            });
+        }
+    });
+
+    console.log("✅ Todos los eventos han sido asignados correctamente.");
 
     // 🟢 5. Asegurar que el menú de usuario se abre correctamente
     const userWelcome = document.getElementById("userWelcome");
@@ -277,17 +316,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 playMenu.classList.remove("visible");
             }
 
-            openUserMenu(); // ✅ Llamamos a la función sin return para que siempre abra User Menu
+            openUserMenu(event);
         });
     }
-
-
-
-    if (playButton) {
-        //  Crear dinámicamente el menú de Play con atributos data-text
+    
+    // Asegurar que el menú de juego se cree solo una vez
+    if (!document.getElementById("playMenu")) {
         const playMenu = document.createElement("div");
         playMenu.id = "playMenu";
-        playMenu.classList.add("login-options"); // Misma clase que el menú de Log in
+        playMenu.classList.add("login-options");
         playMenu.innerHTML = `
             <p class="play-option" data-mode="solo-ai" data-text="solo-ai"></p>
             <div class="separator"></div>
@@ -299,208 +336,119 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="separator"></div>
             <p class="play-option" data-mode="join-tournament" data-text="join-tournament"></p>
         `;
-    
-        //  Agregarlo al DOM después del botón de Play
         playButton.parentNode.appendChild(playMenu);
-    
-        //  Aplicar traducciones iniciales al menú de Play
-        applyLanguage(localStorage.getItem("language") || "en");
-    
-        //  Asegurar que el menú de Play se alinee con el botón
+
+        //  Traducir opciones del menú de juego cuando se crea
+        document.querySelectorAll("#playMenu .play-option").forEach(option => {
+            const key = option.dataset.text;
+            option.textContent = translations[localStorage.getItem("language") || "en"][key] || key;
+        });
+
+        // Función para posicionar el menú dinámicamente
         function positionPlayMenu() {
             const rect = playButton.getBoundingClientRect();
-            const isMobile = window.innerWidth <= 768; //  Detectamos si la pantalla es pequeña
-    
-            if (isMobile) {
-                //  En móviles, el submenú se muestra debajo del botón de Play
-                playMenu.style.top = `${rect.bottom}px`;
-                playMenu.style.left = `${rect.left}px`;
-                playMenu.style.width = `${rect.width}px`; // Que ocupe el mismo ancho que el botón
-            } else {
-                //  En pantallas grandes, se mantiene a la derecha
-                playMenu.style.top = `${rect.top}px`;
-                playMenu.style.left = `${rect.right + 10}px`;
+            const availableSpaceRight = window.innerWidth - rect.right;
+            const menuWidth = 280; // Ancho del menú de Play
+        
+            let newLeft = rect.right;
+            if (availableSpaceRight < menuWidth) {
+                const overlap = menuWidth - availableSpaceRight;
+                newLeft = rect.right - overlap;
             }
+            if (newLeft < rect.left) {
+                newLeft = rect.left;
+            }
+        
+            playMenu.style.top = `${rect.top}px`;
+            playMenu.style.left = `${newLeft}px`;
+            playMenu.style.width = `${menuWidth}px`;
+        
+            // 🔹 Hacer las opciones navegables con Tab
+            playMenu.querySelectorAll(".play-option").forEach(option => {
+                option.setAttribute("tabindex", "0");
+            });
+        
+            // 🔹 Enfocar el primer elemento del menú al abrirlo
+            setTimeout(() => {
+                const firstOption = playMenu.querySelector(".play-option");
+                if (firstOption) firstOption.focus();
+            }, 50);
         }
-    
-        //  Posicionar el menú una vez al inicio
+        
+        
+        
+
         positionPlayMenu();
-    
-        //  Ajustar la posición del Play Menu cuando se cambia el tamaño de la pantalla
         window.addEventListener("resize", positionPlayMenu);
-    
-        //  Evento para abrir/cerrar el submenú al hacer clic en Play
+
+        // 🟢 Evento de clic en el botón Play para abrir/cerrar el menú
         playButton.addEventListener("click", function (event) {
             event.stopPropagation();
-            console.log("✅ Click detectado en el botón de Play");
-    
-            //  Cerrar el menú de usuario si está abierto antes de abrir Play Menu
-            const userMenu = document.getElementById("loginOptions");
-            if (userMenu && userMenu.classList.contains("visible")) {
-                console.log("🛑 User Menu está abierto, cerrándolo antes de abrir Play Menu.");
-                userMenu.classList.remove("visible");
-                userMenu.style.display = "none";
+            // Se podia entrar enel menu sin logearnos
+            if (!isLoggedIn) {
+                console.warn("⛔ No puedes acceder a Play sin iniciar sesión.");
+                return;
             }
-    
-            //  **Asegurar que se calcula la posición ANTES de mostrar el menú**
+
+            const loginOptions = document.getElementById("loginOptions");
+            if (loginOptions.classList.contains("visible")) {
+                loginOptions.classList.remove("visible");
+            }
+
             positionPlayMenu();
-    
-            //  **Ahora alternamos la visibilidad**
             playMenu.classList.toggle("visible");
-            console.log(playMenu.classList.contains("visible") ? "🟢 Play Menu abierto" : "🔴 Play Menu cerrado");
-    
-            //  Actualizar el hash en la URL
+
+            // 🟢 Habilitar navegación con teclado en las opciones del submenú de Play
+            playMenu.querySelectorAll(".play-option").forEach(option => {
+                option.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        console.log(`🎮 Enter/Espacio detectado en: ${option.dataset.mode}`);
+                        option.click(); // 🔥 Simula un clic en la opción seleccionada
+                    }
+                });
+            });
+
+
             history.pushState(null, "", playMenu.classList.contains("visible") ? "#play-menu" : "#loged");
         });
-    
-        //  Evento para cerrar el menú al hacer clic fuera
+
+        // 🟢 Cerrar el menú si se hace clic fuera
         document.addEventListener("click", function (event) {
             if (!playMenu.contains(event.target) && event.target !== playButton) {
                 playMenu.classList.remove("visible");
             }
         });
-    
-        //  Manejo de clics en las opciones del submenú
+
+        // 🟢 Asignar eventos de clic a las opciones de juego
         playMenu.querySelectorAll(".play-option").forEach(option => {
             option.addEventListener("click", function (event) {
                 event.stopPropagation();
                 console.log(`🎮 Opción seleccionada: ${option.dataset.mode}`);
-                playMenu.classList.remove("visible"); // Ocultar después de seleccionar
+                playMenu.classList.remove("visible");
             });
         });
+
     }
+    
     
     
     // 🔄 Inicializando eventos de navegación...
     console.log("🔄 Inicializando eventos de navegación...");
     document.querySelectorAll(".menu-option").forEach(option => {
-        if (option) {
-            option.removeEventListener("click", handleMenuClick); // Evita eventos duplicados
+        if (option.dataset.menu) {
+            option.setAttribute("tabindex", "0"); // Asegurar accesibilidad
+            option.removeEventListener("click", handleMenuClick); 
             option.addEventListener("click", function (event) {
-                updateActiveButton(option); //  Ilumina el botón actual
-                const section = option.dataset.menu; //  Obtener la sección desde el atributo data-menu
-                
-                console.log(`🟢 Se hizo clic en: ${option.id || "sin ID"} (data-menu: ${section})`);
-            
-                if (section) {
-                    handleMenuClick(section); // ✅ Pasamos la sección corregida
-                } else {
-                    console.warn("⚠️ No se encontró el atributo data-menu en:", option);
-                }
+                updateActiveButton(option); 
+                console.log(`🟢 Se hizo clic en: ${option.id || "sin ID"} (data-menu: ${option.dataset.menu})`);
+                handleMenuClick(option.dataset.menu);
             });
-            
-            
-        } else {
-            console.warn("⚠️ Se intentó asignar un evento a un elemento inexistente.");
         }
     });
-
-    // Permitir activar botones con Enter o espacio
-    document.querySelectorAll(".menu-option").forEach(option => {
-        option.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" || event.key === " ") { // Enter o Espacio
-                event.preventDefault(); // Evita scroll con Space
-                this.click(); // Simula clic
-            }
-        });
-    });
-
-        // Habilita el teclado en todos los elementos interactivos del menú (incluidos submenús y login)
-        document.querySelectorAll(".menu-option, .login-option, #languageBox, #languageSelector").forEach(option => {
-            option.setAttribute("tabindex", "0"); // Asegura que sean accesibles con Tab
-    
-            option.addEventListener("keydown", function (event) {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    this.click();
-                }
-            });
-        });
     
 
 }); // ✅ Aquí cierra correctamente el DOMContentLoaded
-
-
-
-
-//  Función nueva para activar accesibilidad en menús
-function enableKeyboardNavigation() {
-    document.querySelectorAll(".menu-option, .login-option, #languageBox, #languageSelector").forEach(option => {
-        option.setAttribute("tabindex", "0");
-
-        option.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                
-                if (option.id === "languageSelector") {
-                    option.focus(); //  Asegura que el select se abra
-                } else {
-                    option.click();
-                }
-            }
-        });
-    });
-}
-
-
-
-// Paraque solo vaya a los elementos interactivos
-// Para que el Tab solo navegue por los elementos interactivos del menú
-function trapTabKey(event) {
-    const focusableElements = Array.from(document.querySelectorAll(
-        ".menu-option, .login-option, #languageBox, #languageSelector, button, input, select"
-    )).filter(el => el.offsetParent !== null); //  Filtrar elementos visibles
-
-    if (focusableElements.length === 0) return;
-
-    const firstElement = focusableElements[0];  // Primer elemento enfocable
-    const lastElement = focusableElements[focusableElements.length - 1]; // Último elemento enfocable
-
-    if (event.key === "Tab") {
-        if (event.shiftKey) { 
-            // Si Shift + Tab, ir al último si estamos en el primero
-            if (document.activeElement === firstElement) {
-                event.preventDefault();
-                lastElement.focus();
-            }
-        } else { 
-            // Si solo Tab, ir al primero si estamos en el último
-            if (document.activeElement === lastElement) {
-                event.preventDefault();
-                firstElement.focus();
-            }
-        }
-    }
-}
-
-
-
-// Agregar el evento de `keydown` para evitar salir de la UI con Tab
-document.addEventListener("keydown", trapTabKey);
-
-
-
-
-// Observador para detectar nuevos elementos en el DOM y hacerlos accesibles
-const observer = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-            if (node.nodeType === 1 && node.matches(".login-option, .menu-option, #languageBox, #languageSelector")) {
-                node.setAttribute("tabindex", "0");
-                node.addEventListener("keydown", function (event) {
-                    if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        node.click();
-                    }
-                });
-            }
-        });
-    });
-});
-
-// Iniciar observador en todo el body
-observer.observe(document.body, { childList: true, subtree: true });
-
 
 
 
@@ -512,29 +460,58 @@ window.addEventListener("hashchange", function () {
     let section = location.hash.replace("#", "") || "login";
     console.log(`🔄 (hashchange) Cambio detectado: ${section}`);
 
-    // Si ya estamos en esta sección, no hacer nada
-    if (document.querySelector(".view-section[style*='block']")?.id === section) {
+    // Validamos si la sección es válida antes de continuar
+    const validSections = ["login", "loged", "play", "settings", "credits", "user-menu"];
+    if (!validSections.includes(section)) {
+        console.warn(`⚠️ Sección no permitida: #${section}. Redirigiendo a login.`);
+        section = "login";
+        history.replaceState(null, "", "#login");
+    }
+
+    // Si el usuario no está logeado y trata de ir a una sección restringida
+    if (!isLoggedIn && section !== "login") {
+        console.warn(`⚠️ Usuario no autenticado intentó acceder a: ${section}. Redirigiendo a login.`);
+        section = "login";
+        history.replaceState(null, "", "#login");
+    }
+
+    // Si el usuario está logeado y trata de ir a "login", lo enviamos a "loged"
+    if (isLoggedIn && section === "login") {
+        console.warn("⚠️ Usuario logeado intentó acceder a login. Redirigiendo a loged.");
+        section = "loged";
+        history.replaceState(null, "", "#loged");
+    }
+
+    // Si ya estamos en la sección actual, no hacer nada
+    const activeSection = document.querySelector(".view-section:not([style*='none'])");
+    if (activeSection?.id === section) {
         console.warn(`⚠️ updateView(${section}) bloqueado, ya estamos en esta sección.`);
         return;
     }
 
-    // Si el usuario no está logeado y trata de ir a "loged", corregimos a "login"
-    if (!isLoggedIn && section === "loged") {
-        console.warn("⚠️ Intento de acceder a loged sin estar logeado. Redirigiendo a login.");
-        section = "login";
-        history.replaceState(null, "", "#login");
-    }
-
-    // Validamos si la sección realmente existe en el DOM
+    // Asegurar que la sección existe en el DOM antes de actualizar la vista
     if (!document.getElementById(section)) {
-        console.warn(`⚠️ Se intentó acceder a una sección inexistente: #${section}. Redirigiendo a login.`);
-        section = "login";
-        history.replaceState(null, "", "#login");
+        console.warn(`⚠️ Sección #${section} no encontrada en el DOM.`);
+        
+        // Si es una sección esperada, la creamos
+        const validSections = ["login", "loged", "play", "settings", "credits", "profile-settings"];
+        
+        if (validSections.includes(section)) {
+            console.log(`✅ Creando dinámicamente la sección #${section}...`);
+            let newSection = document.createElement("div");
+            newSection.id = section;
+            newSection.classList.add("view-section");
+            newSection.style.display = "none";
+            newSection.innerHTML = `<h2>${section.toUpperCase()}</h2>`;
+            document.body.appendChild(newSection);
+        } else {
+            console.warn(`🚨 Se intentó acceder a una sección desconocida: #${section}. Redirigiendo a login.`);
+            section = "login";
+            history.replaceState(null, "", "#login");
+        }
     }
 
-    // Aseguramos que todos los menús estén ocultos antes de cambiar de vista
-    document.querySelectorAll(".view-section").forEach(el => el.style.display = "none");
-    
+
     // Llamamos a updateView para cambiar la vista correctamente
     updateView(section);
 });
@@ -546,10 +523,11 @@ window.addEventListener("hashchange", function () {
 
 
 
+
+
+
 // Cerrar el menú de usuario cuando se hace clic fuera
 document.addEventListener("click", function(event) {
-
-    
     const loginOptions = document.getElementById("loginOptions");
     const loginBox = document.getElementById("loginBox");
 
@@ -578,30 +556,33 @@ document.addEventListener("click", function(event) {
 
 
 
+// Mostrar opciones del menú de login
 function showMenu(menu) {
+    console.log(`🚀 showMenu() llamado con: ${menu}`);
+
     let loginOptions = document.getElementById("loginOptions");
 
     if (!loginOptions) return;
 
     loginOptions.classList.add("visible");
-    loginOptions.style.display = "block";
-    loginOptions.innerHTML = ""; // Limpiar antes de regenerar el contenido
+    loginOptions.style.display = "block"; //  Asegurar que se vuelve a mostrar
+    loginOptions.innerHTML = ""; //  Limpiar antes de regenerar el contenido
 
+    // Obtener el idioma actual
     const lang = localStorage.getItem("language") || "en";
+
     let menuContent = "";
 
     if (menu === "main") {
-        menuContent = `
-            <p class="login-option intra-login" tabindex="0" onclick="loginWithIntra()" data-text="already-42">
-                ${translations[lang]["already-42"]}
-            </p>
+        menuContent = 
+            `<p class="login-option intra-login" data-text="already-42">${translations[lang]["already-42"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="sign-in" data-text="sign-in" tabindex="0">${translations[lang]["sign-in"]}</p>
+            <p class="login-option" data-menu="sign-in" data-text="sign-in">${translations[lang]["sign-in"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="sign-up" data-text="sign-up" tabindex="0">${translations[lang]["sign-up"]}</p>
+            <p class="login-option" data-menu="sign-up" data-text="sign-up">${translations[lang]["sign-up"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="forgot" data-text="forgot-password" tabindex="0">${translations[lang]["forgot-password"]}</p>
-        `;
+            <p class="login-option" data-menu="forgot" data-text="forgot-password">${translations[lang]["forgot-password"]}</p>`
+        ;
     } 
     else if (menu === "sign-in") { 
         menuContent = `
@@ -609,7 +590,7 @@ function showMenu(menu) {
             <input type="text" id="signInEmail" class="login-input" placeholder="${translations[lang]["email"]}">
             <input type="password" id="signInPassword" class="login-input" placeholder="${translations[lang]["password"]}">
             <button class="login-submit" onclick="handleSignIn()">${translations[lang]["sign-in"]}</button>
-            <p class="back-option" data-menu="main" data-text="back" tabindex="0">${translations[lang]["back"]}</p>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
         `;
     }    
     else if (menu === "sign-up") { 
@@ -619,7 +600,7 @@ function showMenu(menu) {
             <input type="email" id="signUpEmail" class="login-input" placeholder="${translations[lang]["email"]}">
             <input type="password" id="signUpPassword" class="login-input" placeholder="${translations[lang]["password"]}">
             <button class="login-submit" onclick="handleSignUp()">${translations[lang]["sign-up-button"]}</button>
-            <p class="back-option" data-menu="main" data-text="back" tabindex="0">${translations[lang]["back"]}</p>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
         `;
     }
     else if (menu === "forgot") {
@@ -627,84 +608,141 @@ function showMenu(menu) {
             <p class="submenu-text" data-text="reset-password">${translations[lang]["reset-password"]}</p>
             <input type="email" class="login-input" placeholder="${translations[lang]["email"]}">
             <button class="login-submit" onclick="resetPassword()">${translations[lang]["send-reset"]}</button>
-            <p class="back-option" data-menu="main" data-text="back" tabindex="0">${translations[lang]["back"]}</p>
+            <p class="back-option" data-menu="main" data-text="back">${translations[lang]["back"]}</p>
         `;
     }
     else if (menu === "userMenu") {
         menuContent = `
             <p class="submenu-text" data-text="user-options">${translations[lang]["user-options"]}</p>
-            <p class="login-option" data-menu="profile-settings" data-text="profile-settings" tabindex="0">
-                ${translations[lang]["profile-settings"]}
-            </p>
+            <p class="login-option" data-menu="profile-settings" data-text="profile-settings">${translations[lang]["profile-settings"]}</p>
             <div class="separator"></div>
-            <p class="login-option" data-menu="logout" data-text="logout" tabindex="0">
-                ${translations[lang]["logout"]}
-            </p>
+            <p class="login-option" data-menu="logout" data-text="logout">${translations[lang]["logout"]}</p>
         `;
     }
     else if (menu === "profile-settings") {
         menuContent = `
-            <p class="submenu-text" data-text="edit-profile">${translations[lang]["edit-profile"]}</p>
-            <p class="login-option" data-menu="edit-username" data-text="edit-username" tabindex="0">${translations[lang]["edit-username"]}</p>
-            <p class="login-option" data-menu="edit-email" data-text="edit-email" tabindex="0">${translations[lang]["edit-email"]}</p>
-            <p class="login-option" data-menu="edit-password" data-text="edit-password" tabindex="0">${translations[lang]["edit-password"]}</p>
+            <p class="submenu-text" data-text="edit-profile">${translations[lang]["edit-profile"] || "Edit Profile"}</p>
+            <p class="login-option" data-menu="edit-username" data-text="edit-username">${translations[lang]["edit-username"] || "Edit Username"}</p>
+            <p class="login-option" data-menu="edit-email" data-text="edit-email">${translations[lang]["edit-email"] || "Edit Email"}</p>
+            <p class="login-option" data-menu="edit-password" data-text="edit-password">${translations[lang]["edit-password"] || "Edit Password"}</p>
             <div class="separator"></div>
-            <p class="login-option" id="toggle-2fa" data-text="toggle-2fa" tabindex="0">${translations[lang]["toggle-2fa"]}</p>
+            <p class="login-option" id="toggle-2fa" data-text="toggle-2fa">${translations[lang]["toggle-2fa"] || "Enable 2FA"}</p>
             <div class="separator"></div>
-            <p class="back-option" data-menu="userMenu" data-text="back" tabindex="0">${translations[lang]["back"]}</p>
+            <p class="back-option" data-menu="userMenu" data-text="back">${translations[lang]["back"] || "← Back"}</p>
         `;
     }
     
+    
+
     loginOptions.innerHTML = menuContent;
 
-    // Agregar accesibilidad: permitir foco y navegación con teclado
+    // Añadir tabindex a las opciones del menú dinámico
+    document.querySelectorAll(".login-option").forEach(option => {
+        option.setAttribute("tabindex", "0"); // Asegura que sean navegables con Tab
+    });
+
+    //  Enfocar el primer elemento navegable del menú
+    setTimeout(() => {
+        let firstElement = loginOptions.querySelector("[tabindex='0'], input, button");
+        if (firstElement) {
+            firstElement.focus();
+        }
+    }, 50);
+
+    //  Simular clic cuando se presiona "Enter" o "Espacio"
+    loginOptions.querySelectorAll("[tabindex='0'], button").forEach(element => {
+        element.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                element.click(); // Simula un clic cuando se presiona Enter o Espacio
+            }
+        });
+    });
+
+    //  Agregar eventos de clic después de actualizar el menú
     setTimeout(() => {
         loginOptions.querySelectorAll(".login-option, .back-option").forEach(option => {
-            option.setAttribute("tabindex", "0"); // Permitir tabulación
-            
-            option.addEventListener("keydown", function (event) {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    this.click();
+            option.addEventListener("click", function (event) {
+                event.stopPropagation(); //  Evita que el clic cierre el menú antes de ejecutarse
+        
+                console.log(`🖱️ Click detectado en opción: ${option.dataset.menu || "sin menú"}`); // 🔍 Depuración
+        
+                if (option.classList.contains("intra-login")) {
+                    loginWithIntra();
+                    return;
+                }
+        
+                if (option.dataset.menu === "logout") {
+                    console.log("⚠️ Clic en Log out detectado. Ejecutando logoutUser()...");
+                    logoutUser();
+                    return;
+                }
+        
+                if (["edit-username", "edit-password", "edit-email"].includes(option.dataset.menu)) {
+                    openEditModal(option.dataset.menu);
+                    return;
+                }
+        
+                if (option.id === "toggle-2fa") {
+                    let twoFAModal = new bootstrap.Modal(document.getElementById("twoFAModal"));
+                    twoFAModal.show();
+                    let confirm2FA = document.getElementById("confirm2FA");
+                    confirm2FA.replaceWith(confirm2FA.cloneNode(true));
+                    confirm2FA = document.getElementById("confirm2FA");
+                    confirm2FA.addEventListener("click", function () {
+                        console.log("✅ 2FA Enabled!");
+                        option.textContent = "Disable 2FA";
+                        twoFAModal.hide();
+                    });
+                    return;
+                }
+        
+                if (option.dataset.menu) {
+                    console.log(`📂 Abriendo submenú: ${option.dataset.menu}`); // 🔍 Depuración
+                    showMenu(option.dataset.menu); 
                 }
             });
         });
-
-        // 💡 Dar focus automático al primer elemento del menú
-        let firstOption = loginOptions.querySelector(".login-option");
-        if (firstOption) firstOption.focus();
-    }, 100);
+    });
 }
-
 
 // EL puto modal
 function openEditModal(type) {
     let modalTitle = document.getElementById("editModalLabel");
     let modalInput = document.getElementById("editModalInput");
     let saveButton = document.getElementById("saveEdit");
+    let cancelButton = document.querySelector("#editModal .btn-secondary"); // Botón de cancelar
 
     // **Asegurar que el modal y los elementos existen**
-    if (!modalTitle || !modalInput || !saveButton) {
+    if (!modalTitle || !modalInput || !saveButton || !cancelButton) {
         console.error("❌ No se encontraron los elementos del modal.");
         return;
     }
+
+    // **Obtener idioma actual**
+    let lang = localStorage.getItem("language") || "en";
 
     // **Resetear input antes de cambiar tipo**
     modalInput.value = "";
     modalInput.type = "text"; // Resetear a texto por defecto
 
+    // **Asignar textos según el idioma**
     if (type === "edit-username") {
-        modalTitle.textContent = "Editar Nombre de Usuario";
-        modalInput.placeholder = "Nuevo nombre de usuario";
+        modalTitle.textContent = translations[lang]["edit-username"];
+        modalInput.placeholder = translations[lang]["edit-username-placeholder"];
     } else if (type === "edit-password") {
-        modalTitle.textContent = "Cambiar Contraseña";
-        modalInput.placeholder = "Nueva contraseña";
+        modalTitle.textContent = translations[lang]["edit-password"];
+        modalInput.placeholder = translations[lang]["edit-password-placeholder"];
         modalInput.type = "password";
     } else if (type === "edit-email") {
-        modalTitle.textContent = "Cambiar Email";
-        modalInput.placeholder = "Nuevo email";
+        modalTitle.textContent = translations[lang]["edit-email"];
+        modalInput.placeholder = translations[lang]["edit-email-placeholder"];
         modalInput.type = "email";
     }
+
+    // **Traducir botones del modal**
+    saveButton.textContent = translations[lang]["save-button"];
+    cancelButton.textContent = translations[lang]["cancel-button"];
 
     // **Abrir el modal correctamente con Bootstrap**
     let modal = new bootstrap.Modal(document.getElementById("editModal"));
@@ -719,7 +757,7 @@ function openEditModal(type) {
     saveButton.onclick = function () {
         let newValue = modalInput.value.trim();
         if (!newValue) {
-            alert("El campo no puede estar vacío.");
+            alert(translations[lang]["empty-field-alert"]); // Traducir alerta
             return;
         }
 
@@ -737,33 +775,43 @@ function openEditModal(type) {
 }
 
 
+// El modal se cierra correctamente sin dejar la pantalla bloqueada
+document.addEventListener("hidden.bs.modal", function () {
+    console.log("🔄 Modal cerrado correctamente. Verificando backdrop...");
+
+    // Eliminar backdrop si aún está presente
+    const backdrop = document.querySelector(".modal-backdrop");
+    if (backdrop) {
+        backdrop.remove();
+        console.log("✅ Backdrop eliminado.");
+    }
+
+    // Restablecer el scroll en la página
+    document.body.classList.remove("modal-open");
+    document.body.style.overflow = "";
+
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = "";
+    }, 300);
+});
 
 
 
 
 
 function handleMenuClick(eventOrSection) {
-    let section;
-
-    //  Si `eventOrSection` es un string, lo usamos directamente
-    if (typeof eventOrSection === "string") {
-        section = eventOrSection;
-    } 
-    //  Si es un evento, obtenemos `dataset.menu`
-    else if (eventOrSection && eventOrSection.currentTarget) {
-        section = eventOrSection.currentTarget.dataset.menu;
-    } 
-    else {
-        console.error("❌ ERROR: handleMenuClick() recibió un valor inválido:", eventOrSection);
-        return;
-    }
-
-    console.log(` handleMenuClick() llamado con sección: ${section}`);
+    const section = typeof eventOrSection === "string" 
+        ? eventOrSection 
+        : eventOrSection?.currentTarget?.dataset.menu;
 
     if (!section) {
-        console.warn("⚠️ Se intentó navegar a una sección vacía.");
+        console.warn("⚠️ Se intentó navegar a una sección vacía o inválida.");
         return;
     }
+
+    console.log(`handleMenuClick() llamado con sección: ${section}`);
 
     // Evitar navegación si el usuario no está logeado y no es login
     if (!isLoggedIn && section !== "login") {
@@ -774,6 +822,7 @@ function handleMenuClick(eventOrSection) {
     history.pushState({ page: section }, "", `#${section}`);
     updateView(section);
 }
+
 
 
 
@@ -1011,7 +1060,9 @@ function activateMenus() {
 
     //  Cambiar solo el texto del botón de Log In a "Welcome, Player"
     const loginBox = document.getElementById("loginBox");
-    loginBox.innerHTML = "Welcome, <strong>Player</strong>";
+    if (loginBox) {
+        loginBox.innerHTML = 'Welcome, <strong>Player</strong>';
+    }
 
     //  Asegurar que el evento de clic sigue funcionando
     loginBox.removeEventListener("click", openUserMenu);
@@ -1023,11 +1074,15 @@ function activateMenus() {
         loginOptions.classList.remove("visible");
         loginOptions.style.display = "none";
     }
-    
+
     //  Actualizar la URL y la vista para evitar que se quede en Login
     history.replaceState(null, "", "#loged");
-    updateView("loged"); // 🔥 Asegurar que cambia de vista
+    updateView("loged");
 }
+
+
+
+
 
 
 
@@ -1041,7 +1096,7 @@ function handleUserWelcomeClick(event) {
     console.log("🟢 Clic en Welcome Player. Alternando iluminación...");
 
     const loginBox = document.getElementById("loginBox");
-    loginBox.classList.add("active"); // 🔥 Iluminar botón
+    loginBox.classList.add("active"); // Iluminar botón
 
     updateActiveButton(event.currentTarget); //  Resaltar botón
     openUserMenu(); //  Abrir menú de usuario
@@ -1137,10 +1192,17 @@ function logoutUser() {
 
     const accessToken = localStorage.getItem("access_token");
 
+    isLoggedIn = false; // Forzar que el usuario está deslogueado ANTES de actualizar la UI
+
     if (!accessToken) {
         console.warn("⚠️ No hay token de sesión, redirigiendo a login.");
         history.replaceState(null, "", "#login");
         updateView("login");
+
+        // ✅ Asegurar que el texto del botón de login es el correcto
+        document.getElementById("loginBox").innerHTML = `<span id="loginText" data-translate="login">${translations[localStorage.getItem("language") || "en"]["login"]}</span>`;
+
+        resetUI();
         return;
     }
 
@@ -1181,8 +1243,16 @@ function logoutUser() {
         //  Redirigir al usuario al login
         history.replaceState(null, "", "#login");
         updateView("login");
+
+        // ✅ Asegurar que el texto del botón de login es el correcto
+        document.getElementById("loginBox").innerHTML = `<span id="loginText" data-translate="login">${translations[localStorage.getItem("language") || "en"]["login"]}</span>`;
+
+        //  Restablecer la interfaz después del logout
+        resetUI();
     });
 }
+
+
 
 
 
@@ -1200,13 +1270,20 @@ function resetUI() {
         }
     });
 
-    //  Restablecer el loginBox
+    //  Restablecer el loginBox según el estado de autenticación
     const loginBox = document.getElementById("loginBox");
-    loginBox.innerHTML = `<div id="userWelcome" class="menu-option active">Welcome, <strong>Player</strong></div>`;
+
+    if (!isLoggedIn) {
+        console.log("🔄 Usuario no autenticado, mostrando 'Log in / Sign up'");
+        loginBox.innerHTML = `<span id="loginText" data-translate="login">${translations[localStorage.getItem("language") || "en"]["login"]}</span>`;
+    } else {
+        console.log("🟢 Usuario autenticado, mostrando 'Welcome, Player'");
+        loginBox.innerHTML = `<div id="userWelcome" class="menu-option active">Welcome, <strong>Player</strong></div>`;
+    }
+
     loginBox.style.display = "flex";
     loginBox.style.alignItems = "center";
     loginBox.style.justifyContent = "center";
-
     loginBox.classList.remove("inactive");
     loginBox.style.pointerEvents = "auto";
     loginBox.style.opacity = "1";
@@ -1216,7 +1293,7 @@ function resetUI() {
     loginOptions.classList.remove("visible");
     loginOptions.style.display = "none";
 
-    //  Eliminar eventos antiguos y volver a asignarlos
+    // **Eliminar eventos antiguos y volver a asignarlos**
     const newLoginBox = loginBox.cloneNode(true);
     loginBox.parentNode.replaceChild(newLoginBox, loginBox);
 
@@ -1226,6 +1303,15 @@ function resetUI() {
             loginOptions.classList.add("visible");
             loginOptions.style.display = "block";
             showMenu("main");
+        }
+    });
+
+    // **Solución: Reasignar evento de teclado para Log in**
+    newLoginBox.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            console.log("Enter o Espacio presionado en Log in / Sign up");
+            newLoginBox.click(); // Simula un clic normal
         }
     });
 
@@ -1240,6 +1326,8 @@ function resetUI() {
 
 
 
+
+
 function closeLoginMenu() {
     console.log("🔴 Cerrando menú de usuario...");
 
@@ -1249,8 +1337,7 @@ function closeLoginMenu() {
         loginOptions.classList.remove("visible");
         loginOptions.style.display = "none";
 
-        // ✅ Asegurar que el contenido del menú se vacíe para evitar restos visuales
-        loginOptions.innerHTML = "";
+        // ✅ No borrar el contenido de loginOptions, solo ocultarlo
     }
 
     let userMenu = document.getElementById("userWelcome");
@@ -1259,25 +1346,18 @@ function closeLoginMenu() {
         userMenu.classList.remove("active");  
     }
 
-    // ✅ Asegurar que no haya restos en el DOM
-    let floatingMenu = document.querySelector(".floating-menu");
-    if (floatingMenu) {
-        console.log("🗑️ Eliminando restos de menús flotantes...");
-        floatingMenu.remove();
-    }
+    // ✅ Eliminar menús flotantes sin afectar loginBox
+    document.querySelectorAll(".floating-menu").forEach(menu => menu.remove());
 }
+
 
 
 // Asegura que solo un botón tenga la clase .active
 function updateActiveButton(newActiveButton) {
-    document.querySelectorAll(".menu-option").forEach(button => {
-        button.classList.remove("active"); //  Desactivamos todos los botones
-    });
-
-    if (newActiveButton) {
-        newActiveButton.classList.add("active"); //  Activamos solo el nuevo
-    }
+    document.querySelector(".menu-option.active")?.classList.remove("active");
+    newActiveButton?.classList.add("active");
 }
+
 
 
 
@@ -1325,7 +1405,7 @@ function applyLanguage(language) {
     const playMenu = document.getElementById("playMenu");
     if (playMenu) {
         playMenu.querySelectorAll(".play-option").forEach(option => {
-            const mode = option.dataset.mode; //  Obtener el modo (ej: "solo-ai", "local", etc.)
+            const mode = option.dataset.mode; // Obtener el modo (ej: "solo-ai", "local", etc.)
             if (translations[language][mode]) {
                 option.textContent = translations[language][mode]; // ✅ Aplicar traducción sin afectar eventos
             }
@@ -1369,6 +1449,15 @@ const translations = {
         "sign-up-button": "Sign up",
         "reset-password": "Reset your password",
         "send-reset": "Send reset link",
+        "edit-username": "Edit Username",
+        "edit-username-placeholder": "New username",
+        "edit-password": "Change Password",
+        "edit-password-placeholder": "New password",
+        "edit-email": "Change Email",
+        "edit-email-placeholder": "New email",
+        "save-button": "Save",
+        "cancel-button": "Cancel",
+        "empty-field-alert": "The field cannot be empty.",
         "back": "← Back"
     },
     es: {
@@ -1402,6 +1491,15 @@ const translations = {
         "online": "Uno contra Uno Online",
         "create-tournament": "Crear Torneo",
         "join-tournament": "Unirse a Torneo",
+        "edit-username": "Editar Nombre de Usuario",
+        "edit-username-placeholder": "Nuevo nombre de usuario",
+        "edit-password": "Cambiar Contraseña",
+        "edit-password-placeholder": "Nueva contraseña",
+        "edit-email": "Cambiar Email",
+        "edit-email-placeholder": "Nuevo email",
+        "save-button": "Guardar",
+        "cancel-button": "Cancelar",
+        "empty-field-alert": "El campo no puede estar vacío.",
         "back": "← Volver"
     },
     fr: {
@@ -1435,6 +1533,15 @@ const translations = {
         "online": "Un contre Un en Ligne",
         "create-tournament": "Créer un Tournoi",
         "join-tournament": "Rejoindre un Tournoi",
+        "edit-username": "Modifier le nom d'utilisateur",
+        "edit-username-placeholder": "Nouveau nom d'utilisateur",
+        "edit-password": "Changer le mot de passe",
+        "edit-password-placeholder": "Nouveau mot de passe",
+        "edit-email": "Changer l'email",
+        "edit-email-placeholder": "Nouvel email",
+        "save-button": "Enregistrer",
+        "cancel-button": "Annuler",
+        "empty-field-alert": "Le champ ne peut pas être vide.",
         "back": "← Retour"
     }
 };
